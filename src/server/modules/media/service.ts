@@ -37,15 +37,19 @@ export function sniffMime(buf: Uint8Array): string | null {
 
 export const mediaQuerySchema = paginationSchema.extend({ folder: z.string().max(40).optional(), q: z.string().max(100).optional() });
 
-export async function uploadMedia(file: File, folder: string, user: SessionUser) {
+/** Carpeta a la que puede subir un visitante sin sesión (hoja de vida de una postulación). Solo PDF. */
+export const ANONYMOUS_FOLDER = "resumes";
+
+export async function uploadMedia(file: File, folder: string, user: SessionUser | null) {
   if (file.size === 0) throw badRequest("El archivo está vacío");
   if (file.size > MAX_FILE_BYTES) throw badRequest("El archivo supera 15 MB");
   const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
   const real = sniffMime(head);
   if (!real || !ALLOWED[real]) throw badRequest(`Tipo de archivo no permitido: ${file.type || "desconocido"}`);
+  if (!user && (folder !== ANONYMOUS_FOLDER || real !== "application/pdf")) throw forbidden("Inicia sesión para subir archivos");
   const typed = new File([file], file.name, { type: real });
   const saved = await storage.save(typed, folder, ALLOWED[real]);
-  return db.media.create({ data: { ...saved, mimeType: real, folder: folder.replace(/[^a-z0-9-_]/gi, "").toLowerCase() || "general", userId: user.id } });
+  return db.media.create({ data: { ...saved, mimeType: real, folder: folder.replace(/[^a-z0-9-_]/gi, "").toLowerCase() || "general", userId: user?.id ?? null } });
 }
 
 export async function listMedia(q: z.infer<typeof mediaQuerySchema>, user: SessionUser) {
@@ -73,14 +77,21 @@ export async function deleteMedia(id: string, user: SessionUser) {
 
 /** ¿Alguna entidad sigue usando esta URL? */
 async function isReferenced(url: string) {
-  const [pi, pri, post, city, user] = await Promise.all([
+  const counts = await Promise.all([
     db.propertyImage.count({ where: { url } }),
     db.projectImage.count({ where: { url } }),
-    db.post.count({ where: { coverUrl: url } }),
+    db.post.count({ where: { OR: [{ coverUrl: url }, { content: { contains: url } }] } }),
+    db.page.count({ where: { content: { contains: url } } }),
+    db.property.count({ where: { content: { contains: url } } }),
+    db.project.count({ where: { content: { contains: url } } }),
     db.city.count({ where: { imageUrl: url } }),
     db.user.count({ where: { avatarUrl: url } }),
+    db.investor.count({ where: { logoUrl: url } }),
+    db.careerApplication.count({ where: { resumeUrl: url } }),
+    // Logo, portada y demás imágenes configuradas en Apariencia.
+    db.setting.count({ where: { value: url } }),
   ]);
-  return pi + pri + post + city + user > 0;
+  return counts.some((n) => n > 0);
 }
 
 /**

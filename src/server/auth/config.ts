@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { db } from "@/server/db";
 import { verifyPassword } from "./password";
-import { checkRateLimit, clientIp } from "@/server/lib/rate-limit";
+import { checkRateLimit, clientIp, isRateLimited } from "@/server/lib/rate-limit";
 
 // Hash de relleno para que un correo inexistente tarde lo mismo que una contraseña incorrecta.
 const DUMMY_HASH = "$2a$10$CwTycUXWue0Thq9StjUM0uJ8i0mZ3eJZ7yq5Q0Qx6q5pVh1fZ5eKe";
@@ -23,10 +23,15 @@ export const authConfig = {
         if (!parsed.success) return null;
         const email = parsed.data.email.toLowerCase();
         const ip = clientIp(request);
-        if (!checkRateLimit(`login:${ip}`, 20, 15 * 60_000) || !checkRateLimit(`login:${email}`, 10, 15 * 60_000)) return null;
+        // Solo cuentan los intentos fallidos: un inicio correcto no acerca al bloqueo.
+        if (isRateLimited(`login:${ip}`, 20, 15 * 60_000) || isRateLimited(`login:${email}`, 10, 15 * 60_000)) return null;
         const user = await db.user.findUnique({ where: { email } });
         const okPass = await verifyPassword(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-        if (!user || !user.isActive || !okPass) return null;
+        if (!user || !user.isActive || !okPass) {
+          checkRateLimit(`login:${ip}`, 20, 15 * 60_000);
+          checkRateLimit(`login:${email}`, 10, 15 * 60_000);
+          return null;
+        }
         return { id: user.id, name: user.name, email: user.email, image: user.avatarUrl, role: user.role };
       },
     }),

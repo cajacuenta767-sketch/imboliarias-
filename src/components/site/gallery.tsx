@@ -57,7 +57,7 @@ export function Gallery({ images, title, hasVideo, onVideo, onMap }: { images: {
           </div>
           <div className="relative flex flex-1 items-center justify-center px-4">
             <button onClick={() => setIdx((i) => (i - 1 + imgs.length) % imgs.length)} className="absolute left-4 z-10 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="Anterior"><ChevronLeft className="h-6 w-6" /></button>
-            <SmartImage key={idx} src={imgs[idx].url} alt={imgs[idx].alt ?? title} className="max-h-[75vh] max-w-full rounded-xl object-contain animate-fade-up" />
+            <SmartImage key={idx} src={imgs[idx].url} alt={imgs[idx].alt ?? title} width={1600} height={1067} className="h-auto max-h-[75vh] w-auto max-w-full rounded-xl object-contain animate-fade-up" />
             <button onClick={() => setIdx((i) => (i + 1) % imgs.length)} className="absolute right-4 z-10 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="Siguiente"><ChevronRight className="h-6 w-6" /></button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-thin">

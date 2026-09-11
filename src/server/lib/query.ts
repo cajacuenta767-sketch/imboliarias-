@@ -12,7 +12,7 @@ export function parseSearchParams<T>(schema: ZodType<T>, sp: SP, defaults: Recor
   for (let i = 0; i < 20; i++) {
     const r = schema.safeParse(input);
     if (r.success) return r.data;
-    const bad = new Set(r.error.issues.map((iss) => String(iss.path[0])).filter(Boolean));
+    const bad = new Set(r.error.issues.filter((iss) => iss.path.length > 0).map((iss) => String(iss.path[0])));
     if (bad.size === 0) break;
     for (const k of bad) delete input[k];
   }

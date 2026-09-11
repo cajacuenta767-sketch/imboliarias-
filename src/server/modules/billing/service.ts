@@ -82,11 +82,13 @@ const invoiceUserSelect = { id: true, name: true, email: true, phone: true } as 
 export const invoiceQuerySchema = paginationSchema.extend({ status: z.enum(INVOICE_STATUSES).optional(), scope: z.enum(["admin", "mine"]).default("mine"), q: z.string().optional() });
 
 /** Siguiente número consecutivo por prefijo y año (HB-2026-0007). */
-export async function nextInvoiceNumber(prefix: string, offset = 0) {
+type DbLike = Pick<typeof db, "invoice">;
+
+export async function nextInvoiceNumber(prefix: string, offset = 0, client: DbLike = db) {
   const year = new Date().getFullYear();
   const head = `${prefix}-${year}-`;
   // La última factura creada del año lleva el mayor consecutivo (no se ordena por texto para no romper al pasar de 9999).
-  const last = await db.invoice.findFirst({ where: { number: { startsWith: head } }, orderBy: { createdAt: "desc" }, select: { number: true } });
+  const last = await client.invoice.findFirst({ where: { number: { startsWith: head } }, orderBy: { createdAt: "desc" }, select: { number: true } });
   const seq = last ? Number(last.number.slice(head.length)) || 0 : 0;
   return `${head}${String(seq + 1 + offset).padStart(4, "0")}`;
 }
@@ -110,7 +112,7 @@ export async function checkout(input: z.infer<typeof checkoutSchema>, user: Sess
       invoice = await db.$transaction(async (tx) => {
         const inv = await tx.invoice.create({
           data: {
-            number: await nextInvoiceNumber(prefix, attempt),
+            number: await nextInvoiceNumber(prefix, attempt, tx),
             userId: user.id,
             packageId: pkg.id,
             couponId: coupon?.id ?? null,
@@ -152,8 +154,9 @@ export async function markPaid(invoiceId: string, payment: { gateway: string; re
   const credited = await db.$transaction(async (tx) => {
     const r = await tx.invoice.updateMany({ where: { id: invoiceId, status: { not: "PAID" } }, data: { status: "PAID", paidAt: new Date() } });
     if (r.count === 0) return false;
-    await tx.payment.updateMany({ where: { invoiceId, status: "PENDING" }, data: { status: "COMPLETED", reference: payment.reference } });
-    await tx.payment.create({ data: { invoiceId, gateway: payment.gateway, reference: payment.reference, amount: inv.total, status: "COMPLETED" } });
+    // Si el checkout dejó un pago pendiente (flujo MANUAL) se completa ese; si no, se crea uno.
+    const promoted = await tx.payment.updateMany({ where: { invoiceId, status: "PENDING" }, data: { status: "COMPLETED", gateway: payment.gateway, reference: payment.reference } });
+    if (promoted.count === 0) await tx.payment.create({ data: { invoiceId, gateway: payment.gateway, reference: payment.reference, amount: inv.total, status: "COMPLETED" } });
     if (inv.package) {
       await tx.user.update({ where: { id: inv.userId }, data: { credits: { increment: inv.package.credits } } });
       await tx.creditTransaction.create({ data: { userId: inv.userId, amount: inv.package.credits, reason: "PACKAGE_PURCHASE", reference: inv.number } });

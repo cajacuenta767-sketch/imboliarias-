@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getSettings } from "@/server/modules/settings/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const s = await getSettings();
   return {

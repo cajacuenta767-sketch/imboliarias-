@@ -21,6 +21,12 @@ export function clientIp(req: Request | { headers: Headers } | undefined): strin
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
 }
 
+/** Solo consulta: true si la clave ya superó el límite (no registra el intento). */
+export function isRateLimited(key: string, limit: number, windowMs: number, now = Date.now()): boolean {
+  const from = now - windowMs;
+  return (buckets.get(key) ?? []).filter((t) => t > from).length >= limit;
+}
+
 /** Devuelve true si la petición está dentro del límite (y la registra). */
 export function checkRateLimit(key: string, limit: number, windowMs: number, now = Date.now()): boolean {
   sweep(now);

@@ -33,8 +33,11 @@ export function FiltersForm({ cities, categories, features, onDone, inline }: { 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [sp]);
   const [f, setF] = useState(fromParams);
-  // Si la URL cambia desde fuera (chips del inicio, "limpiar", navegación), el formulario se resincroniza.
-  useEffect(() => { setF(fromParams()); }, [fromParams]);
+  // Se resincroniza solo cuando cambian los filtros en la URL (chips del inicio, "limpiar"),
+  // no al cambiar orden/vista/página, para no borrar lo que el usuario está escribiendo.
+  const filterKey = JSON.stringify(fromParams());
+  useEffect(() => { setF(fromParams()); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
   const apply = () => {
     const n = new URLSearchParams();
     Object.entries(f).forEach(([k, v]) => {

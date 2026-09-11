@@ -87,3 +87,9 @@ describe("sanitize es idempotente", () => {
     expect(cleanHtml(once)).toBe(once);
   });
 });
+
+describe("cleanText no deja entidades escapadas", () => {
+  it("conserva & y < como texto", () => {
+    expect(cleanText("Casa & lote, área < 200 m²")).toBe("Casa & lote, área < 200 m²");
+  });
+});

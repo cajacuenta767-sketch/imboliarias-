@@ -14,7 +14,7 @@ const check = (name, ok, extra = "") => results.push(`${ok ? "OK " : "FAIL"} ${n
 
 // login as agent
 await page.goto(`${base}/ingresar`, { waitUntil: "networkidle" });
-await page.fill('input[type="email"]', "valentina@habitta.test");
+await page.fill('input[type="email"]', "andres@habitta.test");
 await page.fill('input[type="password"]', "Habitta123!");
 await page.click('button[type="submit"]');
 await page.waitForURL((u) => !u.pathname.startsWith("/ingresar"), { timeout: 30000 });
@@ -27,11 +27,11 @@ const api = async (path, init = {}) => {
 };
 
 // 1. agent cannot self-feature
-let r = await api("/api/v1/me", { method: "PUT", data: { name: "Valentina Restrepo", agent: { isFeatured: false, title: "Asesora senior" } } });
+let r = await api("/api/v1/me", { method: "PUT", data: { name: "Andrés Mejía", agent: { isFeatured: false, title: "Asesor comercial" } } });
 check("PUT /me ok", r.status === 200, String(r.status));
-r = await api("/api/v1/me", { method: "PUT", data: { name: "Valentina Restrepo", agent: { isFeatured: true } } });
+r = await api("/api/v1/me", { method: "PUT", data: { name: "Andrés Mejía", agent: { isFeatured: true } } });
 const me = await api("/api/v1/me");
-check("agent cannot self-feature", me.j?.data?.agent?.isFeatured === true /* seeded featured stays */ || me.j?.data?.agent?.isFeatured === undefined, JSON.stringify(me.j?.data?.agent?.isFeatured));
+check("agent cannot self-feature", me.j?.data?.agent?.isFeatured === false, JSON.stringify(me.j?.data?.agent?.isFeatured));
 check("/me has no passwordHash", me.j?.data && !("passwordHash" in me.j.data));
 
 // 2. upload html disguised as png -> rejected
@@ -65,20 +65,28 @@ check("1 credit charged", before - after === 1, `${before}->${after}`);
 // renew
 r = await api(`/api/v1/properties/${prop.id}/renew`, { method: "POST" });
 check("renew ok", r.status === 200, String(r.status));
-// hidden property not visible publicly via id
+// el propietario sí ve su propiedad pendiente por id
 r = await api(`/api/v1/properties/${prop.id}`);
 check("owner sees pending by id", r.status === 200);
 // delete
 r = await api(`/api/v1/properties/${prop.id}`, { method: "DELETE" });
 check("delete own property", r.status === 200);
 
-// 5. rate limit on inquiries: 10 ok then 429
+// 5. honeypot (antes de agotar el límite de peticiones)
+r = await api("/api/v1/inquiries", { method: "POST", data: { name: "Bot", email: "b@b.test", message: "hola hola", website: "x" } });
+check("honeypot rejected", r.status === 422, String(r.status));
+// rate limit on inquiries: 10 ok then 429
 let last = 0;
 for (let i = 0; i < 12; i++) { const x = await api("/api/v1/inquiries", { method: "POST", data: { name: "Bot", email: "b@b.test", message: "hola hola" } }); last = x.status; }
 check("inquiry rate limited", last === 429, String(last));
-// honeypot
-r = await api("/api/v1/inquiries", { method: "POST", data: { name: "Bot", email: "b@b.test", message: "hola hola", website: "x" } });
-check("honeypot rejected", r.status === 422 || r.status === 429, String(r.status));
+// anonymous resume upload allowed only as PDF in "resumes"
+const anon = await browser.newContext();
+const pdf = Buffer.from("%PDF-1.4\n%fake\n");
+let ar = await anon.request.post(`${base}/api/v1/media`, { multipart: { file: { name: "cv.pdf", mimeType: "application/pdf", buffer: pdf }, folder: "resumes" } });
+check("anonymous resume upload ok", ar.status() === 201, String(ar.status()));
+ar = await anon.request.post(`${base}/api/v1/media`, { multipart: { file: { name: "cv.pdf", mimeType: "application/pdf", buffer: pdf }, folder: "properties" } });
+check("anonymous upload elsewhere rejected", ar.status() === 401, String(ar.status()));
+await anon.close();
 
 // 6. wishlist toggle on pending property rejected
 r = await api("/api/v1/wishlist", { method: "POST", data: { propertyId: "nope" } });
@@ -98,6 +106,21 @@ await page.screenshot({ path: (process.env.OUT ?? "screenshots") + "/v2-mobile-h
 await page.click('button[aria-label="Menú"]').catch(() => {});
 await page.waitForTimeout(500);
 await page.screenshot({ path: (process.env.OUT ?? "screenshots") + "/v2-mobile-menu.png" });
+// 7. admin: guardar un subconjunto de ajustes (el formulario solo envía la sección visible)
+const adminCtx = await browser.newContext();
+const ap = await adminCtx.newPage();
+await ap.goto(`${base}/ingresar`, { waitUntil: "networkidle" });
+await ap.fill('input[type="email"]', "admin@habitta.test");
+await ap.fill('input[type="password"]', "Habitta123!");
+await ap.click('button[type="submit"]');
+await ap.waitForURL((u) => !u.pathname.startsWith("/ingresar"), { timeout: 30000 });
+let sr = await adminCtx.request.put(`${base}/api/v1/settings`, { data: { site_tagline: "Prueba de humo", tax_percent: "19,5" } });
+let sj = await sr.json().catch(() => null);
+check("admin saves partial settings", sr.status() === 200 && sj?.data?.tax_percent === "19.5", `${sr.status()} ${sj?.data?.tax_percent}`);
+sr = await adminCtx.request.put(`${base}/api/v1/settings`, { data: { listing_days: "45 días" } });
+check("invalid numeric setting rejected", sr.status() === 422, String(sr.status()));
+await adminCtx.request.put(`${base}/api/v1/settings`, { data: { site_tagline: "Encuentra el lugar donde tu vida sucede", tax_percent: "0" } });
+await adminCtx.close();
 console.log(results.join("\n"));
 console.log("pageerrors:", errors.slice(0, 5));
 await browser.close();

@@ -19,5 +19,10 @@ export function cleanHtml(html: string | null | undefined): string | null {
   return out || null;
 }
 
-/** Texto plano: elimina cualquier etiqueta. */
-export const cleanText = (s: string | null | undefined) => (s ? sanitizeHtml(s, { allowedTags: [], allowedAttributes: {} }).trim() || null : null);
+const decodeEntities = (s: string) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+/**
+ * Texto plano: elimina cualquier etiqueta y devuelve el texto sin entidades HTML
+ * (los consumidores lo renderizan como texto, no como HTML, así que no debe quedar escapado).
+ */
+export const cleanText = (s: string | null | undefined) => (s ? decodeEntities(sanitizeHtml(s, { allowedTags: [], allowedAttributes: {} })).trim() || null : null);
