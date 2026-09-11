@@ -1,0 +1,9 @@
+"use client";
+import { SimpleCrud } from "@/components/admin/simple-crud";
+import { formatDate } from "@/lib/utils";
+type Row = { id: string; code: string; type: string; value: number; maxUses?: number | null; usedCount: number; expiresAt?: string | null; isActive: boolean };
+export default function Page() {
+  return <SimpleCrud<Row> title="Cupones" subtitle="Descuentos para la compra de paquetes." endpoint="/api/v1/coupons"
+    fields={[{ name: "code", label: "Código", required: true, half: true }, { name: "type", label: "Tipo", type: "select", default: "PERCENT", half: true, options: [{ value: "PERCENT", label: "Porcentaje" }, { value: "FIXED", label: "Monto fijo" }] }, { name: "value", label: "Valor", type: "number", required: true, half: true }, { name: "maxUses", label: "Usos máximos", type: "number", half: true }, { name: "expiresAt", label: "Expira", type: "date", half: true }, { name: "isActive", label: "Activo", type: "checkbox", default: true, half: true }]}
+    columns={[{ key: "code", header: "Código", render: (r) => <code className="font-bold">{r.code}</code> }, { key: "value", header: "Descuento", render: (r) => (r.type === "PERCENT" ? `${r.value}%` : `$${r.value}`) }, { key: "usedCount", header: "Usos", render: (r) => `${r.usedCount}${r.maxUses ? ` / ${r.maxUses}` : ""}` }, { key: "expiresAt", header: "Expira", render: (r) => formatDate(r.expiresAt) || "—" }, { key: "isActive", header: "Activo", render: (r) => (r.isActive ? "Sí" : "No") }]} />;
+}

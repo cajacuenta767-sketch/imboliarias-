@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: habitta
+      POSTGRES_PASSWORD: habitta
+      POSTGRES_DB: habitta
+    ports:
+      - "5432:5432"
+    volumes:
+      - habitta_pg:/var/lib/postgresql/data
+volumes:
+  habitta_pg:

@@ -1,0 +1,8 @@
+"use client";
+import { SimpleCrud } from "@/components/admin/simple-crud";
+type Row = { id: string; name: string; price: number; currencyCode: string; credits: number; durationDays: number; isFeaturedListing: boolean; isPopular: boolean; isActive: boolean; order: number };
+export default function Page() {
+  return <SimpleCrud<Row> title="Paquetes de créditos" subtitle="Lo que compran los agentes para publicar." endpoint="/api/v1/packages" listQuery="?all=1"
+    fields={[{ name: "name", label: "Nombre", required: true, half: true }, { name: "price", label: "Precio", type: "number", required: true, half: true }, { name: "currencyCode", label: "Moneda", half: true, default: "USD" }, { name: "credits", label: "Créditos", type: "number", required: true, half: true }, { name: "durationDays", label: "Vigencia (días)", type: "number", default: 30, half: true }, { name: "order", label: "Orden", type: "number", default: 0, half: true }, { name: "description", label: "Descripción", type: "textarea" }, { name: "isFeaturedListing", label: "Incluye destacados", type: "checkbox", half: true }, { name: "isPopular", label: "Marcar como popular", type: "checkbox", half: true }, { name: "isActive", label: "Activo", type: "checkbox", default: true }]}
+    columns={[{ key: "name", header: "Paquete", render: (r) => <span className="font-semibold">{r.name}{r.isPopular && <span className="chip ml-2 bg-brand-soft text-brand-strong">Popular</span>}</span> }, { key: "price", header: "Precio", render: (r) => `${r.currencyCode} ${r.price}` }, { key: "credits", header: "Créditos" }, { key: "durationDays", header: "Días" }, { key: "isActive", header: "Activo", render: (r) => (r.isActive ? "Sí" : "No") }]} />;
+}

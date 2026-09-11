@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* ───────── Habitta design tokens ───────── */
+:root {
+  --bg: #faf8f5;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f3efe9;
+  --ink: #111827;
+  --ink-soft: #4b5563;
+  --ink-muted: #8a8f9a;
+  --line: #e7e2da;
+  --line-strong: #d6cfc4;
+
+  --brand: #0f766e;
+  --brand-strong: #0b5f59;
+  --brand-soft: #d9f0ec;
+  --brand-glow: #14b8a6;
+
+  --accent: #d97706;
+  --accent-strong: #b45309;
+  --accent-soft: #fdf1dc;
+
+  --sale: #0f766e;
+  --rent: #6d28d9;
+  --rent-soft: #ede9fe;
+  --success: #15803d;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --info: #1d4ed8;
+
+  --radius: 1rem;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-md: 0 8px 24px -12px rgba(17, 24, 39, 0.18);
+  --shadow-lg: 0 24px 48px -24px rgba(17, 24, 39, 0.28);
+
+  --admin-bg: #0b1220;
+  --admin-bg-soft: #111a2c;
+  --admin-line: #1f2a40;
+}
+
+.dark {
+  --bg: #0b1220;
+  --bg-elevated: #111a2c;
+  --bg-muted: #16213a;
+  --ink: #f3f4f6;
+  --ink-soft: #cbd5e1;
+  --ink-muted: #8a94a6;
+  --line: #1f2a40;
+  --line-strong: #2b3852;
+  --brand: #2dd4bf;
+  --brand-strong: #14b8a6;
+  --brand-soft: #0f2f2c;
+  --accent: #f59e0b;
+  --accent-soft: #3a2a0c;
+  --rent-soft: #2a1f4d;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elevated: var(--bg-elevated);
+  --color-muted: var(--bg-muted);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-glow: var(--brand-glow);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-sale: var(--sale);
+  --color-rent: var(--rent);
+  --color-rent-soft: var(--rent-soft);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-admin: var(--admin-bg);
+  --color-admin-soft: var(--admin-bg-soft);
+  --color-admin-line: var(--admin-line);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --radius-xl2: 1.25rem;
+  --shadow-card: var(--shadow-md);
+  --shadow-float: var(--shadow-lg);
+}
+
+@layer base {
+  * { border-color: var(--line); }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  ::selection { background: var(--brand-soft); color: var(--brand-strong); }
+  input, select, textarea { font: inherit; }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40;
+}
+
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .card { @apply rounded-2xl border border-line bg-elevated shadow-[var(--shadow-sm)]; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-strong shadow-[0_8px_20px_-10px_rgba(15,118,110,.7)]; }
+  .btn-accent { @apply btn bg-accent text-white hover:bg-accent-strong; }
+  .btn-ghost { @apply btn bg-transparent text-ink hover:bg-muted; }
+  .btn-outline { @apply btn border border-line-strong bg-elevated text-ink hover:border-brand hover:text-brand; }
+  .btn-dark { @apply btn bg-ink text-white hover:bg-black; }
+  .input { @apply w-full rounded-xl border border-line bg-elevated px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition; }
+  .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold; }
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-brand; }
+  .section-title { @apply font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl; }
+  .prose-content { @apply text-ink-soft leading-relaxed [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_h3]:mt-4 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-brand [&_a]:underline; }
+}
+
+/* Leaflet overrides */
+.leaflet-container { font-family: var(--font-sans); border-radius: 1rem; }
+.price-marker {
+  background: var(--bg-elevated);
+  color: var(--ink);
+  border: 2px solid var(--brand);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  transform: translate(-50%, -100%);
+  position: relative;
+}
+.price-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -6px;
+  width: 10px; height: 10px;
+  background: var(--brand);
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 2px;
+}
+.price-marker.rent { border-color: var(--rent); }
+.price-marker.rent::after { background: var(--rent); }
+.price-marker.active, .price-marker:hover { background: var(--brand); color: #fff; }
+.marker-cluster-custom {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,.85);
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px;
+}
+.leaflet-popup-content-wrapper { border-radius: 14px; padding: 0; overflow: hidden; box-shadow: var(--shadow-lg); }
+.leaflet-popup-content { margin: 0; width: 240px !important; }
+.leaflet-popup-tip-container { display: none; }
+
+/* Scrollbar */
+.scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+
+/* Animations */
+@keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.animate-fade-up { animation: fade-up .5s ease-out both; }
+.animate-fade-up-delay { animation: fade-up .5s .15s ease-out both; }

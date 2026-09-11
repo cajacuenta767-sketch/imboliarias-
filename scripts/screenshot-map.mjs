@@ -1,0 +1,15 @@
+import { chromium } from "playwright-core";
+const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium", args: ["--no-sandbox"] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errors = [];
+page.on("pageerror", (e) => errors.push(e.message));
+await page.goto("http://localhost:3000/propiedades?view=map", { waitUntil: "networkidle", timeout: 60000 });
+await page.waitForSelector(".price-marker, .marker-cluster-custom", { timeout: 15000 }).catch((e) => errors.push("markers: " + e.message));
+await page.waitForTimeout(1500);
+const markers = await page.locator(".price-marker, .marker-cluster-custom").count();
+await page.screenshot({ path: "screenshots/map.png" });
+await page.locator(".price-marker").first().click().catch(() => undefined);
+await page.waitForTimeout(800);
+await page.screenshot({ path: "screenshots/map-popup.png" });
+console.log(JSON.stringify({ markers, url: page.url(), errors }));
+await browser.close();

@@ -1,0 +1,536 @@
+// Habitta - Sistema Inmobiliario
+// Provider por defecto: SQLite (cero configuración). Para PostgreSQL cambia
+// provider = "postgresql" y DATABASE_URL en .env, luego `npx prisma migrate dev`.
+// Nota: SQLite no soporta enums ni Json en Prisma, por eso los estados son String
+// (validados con Zod en src/server/modules/*/schema.ts) y los JSON van como texto.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Usuarios y agentes ───────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          String    @default("CUSTOMER") // ADMIN | AGENT | CUSTOMER
+  phone         String?
+  avatarUrl     String?
+  credits       Int       @default(0)
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  agent         Agent?
+  properties    Property[]
+  wishlist      Wishlist[]
+  invoices      Invoice[]
+  creditTxns    CreditTransaction[]
+  reviews       Review[]
+  inquiries     Inquiry[]      @relation("InquiryOwner")
+  posts         Post[]
+  media         Media[]
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  title       String?  // "Asesora senior"
+  agency      String?
+  bio         String?
+  whatsapp    String?
+  facebook    String?
+  instagram   String?
+  linkedin    String?
+  website     String?
+  cityId      String?
+  city        City?    @relation(fields: [cityId], references: [id])
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  properties  Property[]
+}
+
+// ─────────────────────────── Ubicaciones ───────────────────────────
+
+model Country {
+  id       String  @id @default(cuid())
+  name     String
+  code     String  @unique // CO, MX
+  states   State[]
+  isActive Boolean @default(true)
+}
+
+model State {
+  id        String  @id @default(cuid())
+  name      String
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cities    City[]
+  isActive  Boolean @default(true)
+}
+
+model City {
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
+  stateId    String
+  state      State      @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  lat        Float?
+  lng        Float?
+  imageUrl   String?
+  isFeatured Boolean    @default(false)
+  isActive   Boolean    @default(true)
+  properties Property[]
+  projects   Project[]
+  agents     Agent[]
+}
+
+// ─────────────────────────── Catálogos ───────────────────────────
+
+model Category {
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
+  icon       String?    // nombre de icono lucide
+  order      Int        @default(0)
+  isDefault  Boolean    @default(false)
+  isActive   Boolean    @default(true)
+  properties Property[]
+  projects   Project[]
+}
+
+model Feature {
+  id         String            @id @default(cuid())
+  name       String
+  icon       String?
+  isActive   Boolean           @default(true)
+  properties PropertyFeature[]
+  projects   ProjectFeature[]
+}
+
+model Facility {
+  id         String             @id @default(cuid())
+  name       String
+  icon       String?
+  isActive   Boolean            @default(true)
+  properties PropertyFacility[]
+  projects   ProjectFacility[]
+}
+
+model Investor {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?
+  website   String?
+  isActive  Boolean   @default(true)
+  projects  Project[]
+}
+
+// ─────────────────────────── Propiedades ───────────────────────────
+
+model Property {
+  id            String   @id @default(cuid())
+  uniqueId      String?  @unique
+  slug          String   @unique
+  title         String
+  description   String?
+  content       String?  // HTML del editor
+  type          String   // SALE | RENT
+  status        String   @default("AVAILABLE") // AVAILABLE | SOLD | RENTED | RESERVED | HIDDEN
+  moderation    String   @default("PENDING")   // PENDING | APPROVED | REJECTED
+  price         Float
+  currencyCode  String   @default("USD")
+  period        String?  // MONTH | YEAR (solo alquiler)
+  area          Float?   // m²
+  bedrooms      Int?
+  bathrooms     Int?
+  floors        Int?
+  parking       Int?
+  yearBuilt     Int?
+  address       String?
+  lat           Float?
+  lng           Float?
+  videoUrl      String?
+  isFeatured    Boolean  @default(false)
+  views         Int      @default(0)
+  expiresAt     DateTime?
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  cityId        String?
+  city          City?     @relation(fields: [cityId], references: [id])
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  projectId     String?
+  project       Project?  @relation(fields: [projectId], references: [id])
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  agentId       String?
+  agent         Agent?    @relation(fields: [agentId], references: [id])
+
+  images        PropertyImage[]
+  features      PropertyFeature[]
+  facilities    PropertyFacility[]
+  customValues  CustomFieldValue[]
+  reviews       Review[]
+  inquiries     Inquiry[]
+  wishlist      Wishlist[]
+  translations  Translation[]
+
+  @@index([type, status, moderation])
+  @@index([cityId])
+  @@index([price])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url        String
+  alt        String?
+  order      Int      @default(0)
+}
+
+model PropertyFeature {
+  propertyId String
+  featureId  String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  feature    Feature  @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  @@id([propertyId, featureId])
+}
+
+model PropertyFacility {
+  propertyId String
+  facilityId String
+  distance   String?  // "500 m", "2 km"
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  @@id([propertyId, facilityId])
+}
+
+model CustomField {
+  id       String  @id @default(cuid())
+  name     String
+  key      String  @unique
+  type     String  @default("TEXT") // TEXT | NUMBER | SELECT | CHECKBOX
+  options  String? // JSON string para SELECT
+  target   String  @default("PROPERTY") // PROPERTY | PROJECT
+  order    Int     @default(0)
+  values   CustomFieldValue[]
+}
+
+model CustomFieldValue {
+  id         String      @id @default(cuid())
+  fieldId    String
+  field      CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property?   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  value      String
+}
+
+// ─────────────────────────── Proyectos ───────────────────────────
+
+model Project {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  description  String?
+  content      String?
+  status       String   @default("SELLING") // SELLING | BUILDING | FINISHED | COMING_SOON
+  priceFrom    Float?
+  priceTo      Float?
+  currencyCode String   @default("USD")
+  address      String?
+  lat          Float?
+  lng          Float?
+  units        Int?
+  floors       Int?
+  finishAt     DateTime?
+  videoUrl     String?
+  isFeatured   Boolean  @default(false)
+  views        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cityId       String?
+  city         City?     @relation(fields: [cityId], references: [id])
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id])
+  investorId   String?
+  investor     Investor? @relation(fields: [investorId], references: [id])
+
+  images       ProjectImage[]
+  features     ProjectFeature[]
+  facilities   ProjectFacility[]
+  properties   Property[]
+  customValues CustomFieldValue[]
+  inquiries    Inquiry[]
+  translations Translation[]
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  order     Int     @default(0)
+}
+
+model ProjectFeature {
+  projectId String
+  featureId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  feature   Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  @@id([projectId, featureId])
+}
+
+model ProjectFacility {
+  projectId  String
+  facilityId String
+  distance   String?
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  @@id([projectId, facilityId])
+}
+
+// ─────────────────────────── Interacción ───────────────────────────
+
+model Review {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  authorName String
+  rating     Int
+  comment    String
+  status     String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  createdAt  DateTime @default(now())
+}
+
+model Inquiry {
+  id         String    @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  message    String
+  status     String    @default("NEW") // NEW | READ | REPLIED | CLOSED
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  ownerId    String?   // agente/usuario dueño de la propiedad
+  owner      User?     @relation("InquiryOwner", fields: [ownerId], references: [id])
+  createdAt  DateTime  @default(now())
+}
+
+model Wishlist {
+  userId     String
+  propertyId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  @@id([userId, propertyId])
+}
+
+// ─────────────────────────── Paquetes, créditos y pagos ───────────────────────────
+
+model Package {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  currencyCode String   @default("USD")
+  credits     Int       // créditos que otorga
+  durationDays Int      @default(30) // vigencia de una publicación pagada con este paquete
+  isFeaturedListing Boolean @default(false)
+  isPopular   Boolean   @default(false)
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  invoices    Invoice[]
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  type        String    @default("PERCENT") // PERCENT | FIXED
+  value       Float
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  invoices    Invoice[]
+}
+
+model Invoice {
+  id         String    @id @default(cuid())
+  number     String    @unique
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  packageId  String?
+  package    Package?  @relation(fields: [packageId], references: [id])
+  couponId   String?
+  coupon     Coupon?   @relation(fields: [couponId], references: [id])
+  subtotal   Float
+  discount   Float     @default(0)
+  tax        Float     @default(0)
+  total      Float
+  currencyCode String  @default("USD")
+  status     String    @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+  payments   Payment[]
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  gateway   String   // MANUAL | SANDBOX | STRIPE | PAYU
+  reference String?
+  amount    Float
+  status    String   @default("PENDING") // PENDING | COMPLETED | FAILED
+  createdAt DateTime @default(now())
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int      // positivo = compra, negativo = consumo
+  reason      String   // PACKAGE_PURCHASE | PROPERTY_PUBLISH | PROPERTY_RENEW | ADMIN_ADJUST
+  reference   String?
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────── Contenido ───────────────────────────
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String?
+  template  String   @default("default") // default | full-width | contact
+  status    String   @default("PUBLISHED") // DRAFT | PUBLISHED
+  metaTitle String?
+  metaDescription String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostCategory {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  posts Post[]
+}
+
+model Post {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  excerpt     String?
+  content     String?
+  coverUrl    String?
+  status      String        @default("PUBLISHED") // DRAFT | PUBLISHED
+  isFeatured  Boolean       @default(false)
+  views       Int           @default(0)
+  authorId    String?
+  author      User?         @relation(fields: [authorId], references: [id])
+  categoryId  String?
+  category    PostCategory? @relation(fields: [categoryId], references: [id])
+  tags        String?       // separados por coma
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Career {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String?
+  content     String?
+  location    String?
+  type        String    @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | REMOTE
+  salary      String?
+  deadline    DateTime?
+  status      String    @default("OPEN") // OPEN | CLOSED
+  createdAt   DateTime  @default(now())
+  applications CareerApplication[]
+}
+
+model CareerApplication {
+  id        String   @id @default(cuid())
+  careerId  String
+  career    Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  phone     String?
+  message   String?
+  resumeUrl String?
+  status    String   @default("NEW") // NEW | REVIEWED | INTERVIEW | HIRED | REJECTED
+  createdAt DateTime @default(now())
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  name      String
+  mimeType  String
+  size      Int
+  folder    String   @default("general")
+  width     Int?
+  height    Int?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────── Configuración ───────────────────────────
+
+model Setting {
+  key   String @id
+  value String
+  group String @default("general") // general | appearance | contact | social | payments | email | seo
+}
+
+model Currency {
+  code      String  @id // USD, COP, EUR, MXN
+  name      String
+  symbol    String
+  rate      Float   @default(1) // relativa a la moneda por defecto
+  decimals  Int     @default(0)
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+  order     Int     @default(0)
+}
+
+model Translation {
+  id         String    @id @default(cuid())
+  locale     String    // es | en
+  field      String    // title | description | content
+  value      String
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@unique([locale, field, propertyId, projectId])
+}
