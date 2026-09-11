@@ -5,7 +5,9 @@ import { notFound } from "@/server/errors";
 import { paginationSchema, paginate, meta } from "@/server/lib/pagination";
 import { uniqueSlug } from "@/server/lib/slug";
 import { PROJECT_STATUSES } from "@/lib/constants";
-import { propertyCardInclude } from "@/server/modules/properties/service";
+import { optionalDate } from "@/server/lib/query";
+import { cleanHtml, cleanText } from "@/server/lib/sanitize";
+import { propertyCardInclude, publicWhere } from "@/server/modules/properties/service";
 
 export const projectInputSchema = z.object({
   name: z.string().min(3).max(160),
@@ -20,7 +22,7 @@ export const projectInputSchema = z.object({
   lng: z.coerce.number().optional().nullable(),
   units: z.coerce.number().int().optional().nullable(),
   floors: z.coerce.number().int().optional().nullable(),
-  finishAt: z.coerce.date().optional().nullable(),
+  finishAt: optionalDate(),
   videoUrl: z.string().optional().nullable(),
   isFeatured: z.coerce.boolean().default(false),
   cityId: z.string().optional().nullable(),
@@ -56,7 +58,7 @@ export const projectFullInclude = {
   investor: true,
   features: { include: { feature: true } },
   facilities: { include: { facility: true } },
-  properties: { where: { moderation: "APPROVED", status: "AVAILABLE" }, include: propertyCardInclude, take: 8 },
+  properties: { where: publicWhere(), include: propertyCardInclude, take: 8 },
   _count: { select: { properties: true, images: true } },
 } satisfies Prisma.ProjectInclude;
 
@@ -106,7 +108,7 @@ function rel(input: ProjectInput) {
 function scalars(input: ProjectInput) {
   const { images, featureIds, facilities, ...rest } = input;
   void images; void featureIds; void facilities;
-  return { ...rest, videoUrl: rest.videoUrl || null, cityId: rest.cityId || null, categoryId: rest.categoryId || null, investorId: rest.investorId || null };
+  return { ...rest, name: rest.name.trim(), description: cleanText(rest.description), content: cleanHtml(rest.content), videoUrl: rest.videoUrl || null, cityId: rest.cityId || null, categoryId: rest.categoryId || null, investorId: rest.investorId || null };
 }
 
 export async function createProject(input: ProjectInput) {

@@ -3,14 +3,14 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { notFound } from "@/server/errors";
 import { paginationSchema, paginate, meta } from "@/server/lib/pagination";
-import { propertyCardInclude } from "@/server/modules/properties/service";
+import { propertyCardInclude, publicWhere } from "@/server/modules/properties/service";
 
 export const agentQuerySchema = paginationSchema.extend({ q: z.string().optional(), city: z.string().optional() });
 
 export const agentInclude = {
   user: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true, isActive: true } },
   city: { include: { state: true } },
-  _count: { select: { properties: { where: { moderation: "APPROVED", status: "AVAILABLE" } } } },
+  _count: { select: { properties: { where: publicWhere() } } },
 } satisfies Prisma.AgentInclude;
 export type AgentCard = Prisma.AgentGetPayload<{ include: typeof agentInclude }>;
 
@@ -32,7 +32,7 @@ export const featuredAgents = (take = 4) => db.agent.findMany({ where: { user: {
 export async function getAgentBySlug(slug: string) {
   const a = await db.agent.findUnique({
     where: { slug },
-    include: { ...agentInclude, properties: { where: { moderation: "APPROVED", status: "AVAILABLE" }, include: propertyCardInclude, orderBy: { createdAt: "desc" }, take: 12 } },
+    include: { ...agentInclude, properties: { where: publicWhere(), include: propertyCardInclude, orderBy: { createdAt: "desc" }, take: 12 } },
   });
   if (!a) throw notFound("Agente no encontrado");
   return a;

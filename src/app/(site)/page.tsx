@@ -7,9 +7,9 @@ import { AgentCard, CityCard, PostCard, ProjectCard } from "@/components/site/ca
 import { SectionHeader } from "@/components/ui/misc";
 import { SmartImage } from "@/components/ui/smart-image";
 import { getSettings } from "@/server/modules/settings/service";
-import { listCities, featuredCities } from "@/server/modules/locations/service";
+import { cityOptions, featuredCities } from "@/server/modules/locations/service";
 import { listCategories } from "@/server/modules/categories/service";
-import { featuredProperties, latestProperties } from "@/server/modules/properties/service";
+import { featuredProperties, latestProperties, publicWhere } from "@/server/modules/properties/service";
 import { featuredProjects } from "@/server/modules/projects/service";
 import { featuredAgents } from "@/server/modules/agents/service";
 import { latestPosts } from "@/server/modules/posts/service";
@@ -23,7 +23,7 @@ export default async function HomePage() {
   const [t, s, cities, categories, featured, latestSale, latestRent, projects, agents, posts, fCities, stats, testimonials] = await Promise.all([
     getTranslations("home"),
     getSettings(),
-    listCities(),
+    cityOptions(),
     listCategories(true),
     featuredProperties(8),
     latestProperties("SALE", 4),
@@ -33,7 +33,7 @@ export default async function HomePage() {
     latestPosts(3),
     featuredCities(),
     Promise.all([
-      db.property.count({ where: { moderation: "APPROVED", status: "AVAILABLE" } }),
+      db.property.count({ where: publicWhere() }),
       db.city.count({ where: { isActive: true } }),
       db.agent.count(),
     ]),
@@ -44,7 +44,7 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <section className="relative isolate min-h-[640px] overflow-hidden bg-ink text-white">
-        <SmartImage src={s.hero_image} alt="" className="absolute inset-0 h-full w-full" />
+        <SmartImage src={s.hero_image} alt="" priority width={2000} height={1200} className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/40 to-ink/80" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(20,184,166,.35),transparent_55%)]" />
         <div className="container-x relative flex min-h-[640px] flex-col justify-center py-24">

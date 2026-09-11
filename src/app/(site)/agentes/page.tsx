@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { AgentCard } from "@/components/site/cards";
 import { Pagination } from "@/components/ui/pagination";
 import { agentQuerySchema, listAgents } from "@/server/modules/agents/service";
+import { parseSearchParams } from "@/server/lib/query";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Agentes" };
 
 export default async function AgentsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const q = agentQuerySchema.parse({ ...sp, perPage: "12" });
+  const q = parseSearchParams(agentQuerySchema, sp, { perPage: "12" });
   const { items, meta } = await listAgents(q);
   return (
     <div className="container-x py-10">

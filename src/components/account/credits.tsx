@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 type Pkg = { id: string; name: string; description?: string | null; price: number; currencyCode: string; credits: number; durationDays: number; isFeaturedListing: boolean; isPopular: boolean };
 type Totals = { subtotal: number; discount: number; tax: number; total: number };
 
-export function PackagesGrid({ packages, taxPercent }: { packages: Pkg[]; taxPercent: number }) {
+export function PackagesGrid({ packages, taxPercent, gateway }: { packages: Pkg[]; taxPercent: number; gateway: "SANDBOX" | "MANUAL" }) {
   const router = useRouter();
   const [sel, setSel] = useState<Pkg | null>(null);
   const [coupon, setCoupon] = useState("");
@@ -78,8 +78,8 @@ export function PackagesGrid({ packages, taxPercent }: { packages: Pkg[]; taxPer
               {totals.tax > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Impuestos</dt><dd><Price amount={totals.tax} currencyCode={sel.currencyCode} className="text-sm" /></dd></div>}
               <div className="flex justify-between border-t border-line pt-2 text-base font-bold"><dt>Total</dt><dd><Price amount={totals.total} currencyCode={sel.currencyCode} /></dd></div>
             </dl>
-            <button onClick={pay} disabled={loading} className="btn-primary w-full">{loading ? <Spinner /> : <ShieldCheck className="h-4 w-4" />} Pagar ahora</button>
-            <p className="text-center text-xs text-ink-muted">Pasarela en modo sandbox: el pago se aprueba al instante.</p>
+            <button onClick={pay} disabled={loading} className="btn-primary w-full">{loading ? <Spinner /> : <ShieldCheck className="h-4 w-4" />} {gateway === "SANDBOX" ? "Pagar ahora" : "Generar factura"}</button>
+            <p className="text-center text-xs text-ink-muted">{gateway === "SANDBOX" ? "Pasarela en modo sandbox: el pago se aprueba al instante." : "Recibirás la factura pendiente; los créditos se acreditan cuando confirmemos el pago."}</p>
           </div>
         )}
       </Modal>

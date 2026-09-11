@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { notFound } from "@/server/errors";
 import { uniqueSlug } from "@/server/lib/slug";
 import { CONTENT_STATUSES } from "@/lib/constants";
+import { cleanHtml } from "@/server/lib/sanitize";
 
 export const pageSchema = z.object({
   title: z.string().min(2),
@@ -22,10 +23,10 @@ export async function getPageBySlug(slug: string) {
 }
 export async function createPage(input: z.infer<typeof pageSchema>) {
   const slug = await uniqueSlug(input.slug || input.title, async (s) => !!(await db.page.findUnique({ where: { slug: s } })));
-  return db.page.create({ data: { ...input, slug } });
+  return db.page.create({ data: { ...input, content: cleanHtml(input.content), slug } });
 }
 export async function updatePage(id: string, input: z.infer<typeof pageSchema>) {
-  const data = { ...input } as Record<string, unknown>;
+  const data = { ...input, content: cleanHtml(input.content) } as Record<string, unknown>;
   if (input.slug) data.slug = await uniqueSlug(input.slug, async (s) => !!(await db.page.findFirst({ where: { slug: s, NOT: { id } } })));
   else delete data.slug;
   return db.page.update({ where: { id }, data });

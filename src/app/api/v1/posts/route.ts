@@ -1,9 +1,10 @@
 import { created, handler, ok, parseBody, parseQuery } from "@/server/http";
-import { requireAdmin } from "@/server/auth/guards";
+import { currentUser, isAdmin, requireAdmin } from "@/server/auth/guards";
 import { createPost, listPosts, postQuerySchema, postSchema } from "@/server/modules/posts/service";
 
 export const GET = handler(async (req) => {
   const q = parseQuery(req, postQuerySchema);
+  if (q.scope === "admin" && !isAdmin(await currentUser())) q.scope = "public";
   const { items, meta } = await listPosts(q);
   return ok(items, meta);
 });

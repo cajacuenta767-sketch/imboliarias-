@@ -1,6 +1,6 @@
 import { handler, ok, parseBody, routeParams } from "@/server/http";
 import { currentUser, requireUser } from "@/server/auth/guards";
-import { forbidden } from "@/server/errors";
+import { notFound } from "@/server/errors";
 import { propertyInputSchema } from "@/server/modules/properties/schema";
 import { deleteProperty, getPropertyById, updateProperty } from "@/server/modules/properties/service";
 
@@ -11,7 +11,7 @@ export const GET = handler(async (_req, ctx: Ctx) => {
   const p = await getPropertyById(id);
   const user = await currentUser();
   const owner = user && (user.role === "ADMIN" || user.id === p.authorId);
-  if (!owner && p.moderation !== "APPROVED") throw forbidden();
+  if (!owner && (p.moderation !== "APPROVED" || p.status === "HIDDEN")) throw notFound("Propiedad no disponible");
   return ok(p);
 });
 

@@ -18,3 +18,11 @@ export function LinkedinIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden><path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9.5h3V19zM6.5 8.2a1.7 1.7 0 1 1 0-3.5 1.7 1.7 0 0 1 0 3.5zM19 19h-3v-4.6c0-1.1 0-2.5-1.5-2.5S12.7 13 12.7 14.3V19h-3V9.5h2.9v1.3a3.2 3.2 0 0 1 2.8-1.5c3 0 3.6 2 3.6 4.6V19z" /></svg>
   );
 }
+
+export function TiktokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M12.7 2h3.1c.2 1.6 1 3 2.2 3.9 1 .8 2.2 1.2 3.4 1.3v3.1a8.6 8.6 0 0 1-5.4-1.9v7.3A6.3 6.3 0 1 1 9.7 9.4v3.2a3.2 3.2 0 1 0 3 3.1V2z" />
+    </svg>
+  );
+}

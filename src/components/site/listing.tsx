@@ -9,7 +9,7 @@ import { PropertyGrid, type PropertyCardData } from "@/components/site/property-
 import { Pagination } from "@/components/ui/pagination";
 import { Sheet } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/misc";
-import { apiGet } from "@/lib/api";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { MapPoint } from "@/components/site/map-view";
 
@@ -27,10 +27,14 @@ export function FiltersForm({ cities, categories, features, onDone, inline }: { 
   const router = useRouter();
   const pathname = usePathname();
   const get = (k: string) => sp.get(k) ?? "";
-  const [f, setF] = useState({
+  const fromParams = useCallback(() => ({
     q: get("q"), type: get("type"), city: get("city"), category: get("category"), minPrice: get("minPrice"), maxPrice: get("maxPrice"),
     minArea: get("minArea"), maxArea: get("maxArea"), bedrooms: get("bedrooms"), bathrooms: get("bathrooms"), features: (get("features") ? get("features").split(",") : []) as string[],
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [sp]);
+  const [f, setF] = useState(fromParams);
+  // Si la URL cambia desde fuera (chips del inicio, "limpiar", navegación), el formulario se resincroniza.
+  useEffect(() => { setF(fromParams()); }, [fromParams]);
   const apply = () => {
     const n = new URLSearchParams();
     Object.entries(f).forEach(([k, v]) => {
@@ -124,7 +128,7 @@ export function FiltersForm({ cities, categories, features, onDone, inline }: { 
       )}
       <div className={cn("flex gap-2", inline && "items-end")}>
         <button type="button" onClick={apply} className="btn-primary flex-1">{tc("apply")}</button>
-        <button type="button" onClick={clear} className="btn-ghost" title={tc("clearFilters")}><X className="h-4 w-4" /></button>
+        <button type="button" onClick={clear} className="btn-ghost" title={tc("clearFilters")} aria-label={tc("clearFilters")}><X className="h-4 w-4" /></button>
       </div>
     </div>
   );
@@ -140,6 +144,7 @@ export function PropertyListing({ items, meta, cities, categories, features, map
   const [open, setOpen] = useState(false);
   const [points, setPoints] = useState<MapPoint[]>([]);
   const [mobileMap, setMobileMap] = useState(false);
+  const [pointsLoading, setPointsLoading] = useState(false);
 
   const setParam = useCallback(
     (k: string, v: string) => {
@@ -154,7 +159,23 @@ export function PropertyListing({ items, meta, cities, categories, features, map
 
   useEffect(() => {
     if (view !== "map" && !mobileMap) return;
-    apiGet<MapPoint[]>(`/api/v1/properties/map?${mapQuery}`).then((r) => setPoints(r.data ?? [])).catch(() => setPoints([]));
+    // AbortController: una respuesta lenta anterior no pisa a la más reciente al mover filtros/mapa rápido.
+    const ctrl = new AbortController();
+    setPointsLoading(true);
+    fetch(`/api/v1/properties/map?${mapQuery}`, { signal: ctrl.signal })
+      .then(async (r) => {
+        const j = (await r.json().catch(() => null)) as { data?: MapPoint[]; error?: string } | null;
+        if (!r.ok) throw new Error(j?.error ?? "Error");
+        setPoints(j?.data ?? []);
+      })
+      .catch((e) => {
+        if ((e as Error).name === "AbortError") return;
+        setPoints([]);
+        toast.error(tc("mapError"));
+      })
+      .finally(() => { if (!ctrl.signal.aborted) setPointsLoading(false); });
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, mobileMap, mapQuery]);
 
   const activeFilters = useMemo(() => ["q", "type", "city", "category", "minPrice", "maxPrice", "minArea", "maxArea", "bedrooms", "bathrooms", "features"].filter((k) => sp.get(k)).length, [sp]);
@@ -168,14 +189,14 @@ export function PropertyListing({ items, meta, cities, categories, features, map
         <button onClick={() => setOpen(true)} className="btn-outline py-2 lg:hidden">
           <SlidersHorizontal className="h-4 w-4" /> {tc("filters")} {activeFilters > 0 && <span className="rounded-full bg-brand px-1.5 text-[10px] text-white">{activeFilters}</span>}
         </button>
-        <select className="input w-auto cursor-pointer py-2" value={sp.get("sort") ?? "newest"} onChange={(e) => setParam("sort", e.target.value)}>
+        <select className="input w-auto cursor-pointer py-2" aria-label={tc("sortLabel")} value={sp.get("sort") ?? "newest"} onChange={(e) => setParam("sort", e.target.value)}>
           {(["newest", "price_asc", "price_desc", "area_desc", "views"] as const).map((k) => (
             <option key={k} value={k}>{t(`sort.${k}`)}</option>
           ))}
         </select>
-        <div className="inline-flex rounded-full bg-muted p-1">
-          {([["grid", LayoutGrid], ["list", List], ["map", MapIcon]] as const).map(([v, Icon]) => (
-            <button key={v} onClick={() => setParam("view", v)} className={cn("rounded-full p-2 transition", view === v ? "bg-elevated shadow text-brand" : "text-ink-soft hover:text-ink")} aria-label={v}>
+        <div className="inline-flex rounded-full bg-muted p-1" role="group" aria-label={tc("viewGrid").split(" ")[0]}>
+          {([["grid", LayoutGrid, tc("viewGrid")], ["list", List, tc("viewList")], ["map", MapIcon, tc("viewMap")]] as const).map(([v, Icon, label]) => (
+            <button key={v} onClick={() => setParam("view", v)} className={cn("rounded-full p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50", view === v ? "bg-elevated shadow text-brand" : "text-ink-soft hover:text-ink")} aria-label={label} aria-pressed={view === v}>
               <Icon className="h-4 w-4" />
             </button>
           ))}
@@ -199,15 +220,16 @@ export function PropertyListing({ items, meta, cities, categories, features, map
         <FiltersForm cities={cities} categories={categories} features={features} onDone={() => setOpen(false)} />
       </Sheet>
       {view === "map" ? (
-        <div className="grid gap-5 lg:grid-cols-[1fr_1fr] xl:grid-cols-[1.1fr_1fr]">
-          <div>
+        <div className="grid gap-5 pb-24 lg:grid-cols-[1fr_1fr] lg:pb-0 xl:grid-cols-[1.1fr_1fr]">
+          <div className={cn(mobileMap && "hidden lg:block")}>
             {toolbar}
-            <div className="lg:max-h-[calc(100vh-180px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin">{content}</div>
+            <div className="lg:max-h-[calc(100dvh-180px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin">{content}</div>
           </div>
-          <div className={cn("sticky top-24 h-[70vh] overflow-hidden rounded-3xl border border-line lg:h-[calc(100vh-130px)]", !mobileMap && "hidden lg:block")}>
-            <MapView points={points} onBoundsChange={(bbox) => setParam("bbox", bbox)} />
+          <div className={cn("relative sticky top-24 h-[65dvh] overflow-hidden rounded-3xl border border-line lg:h-[calc(100dvh-130px)]", !mobileMap && "hidden lg:block")}>
+            {pointsLoading && <div className="absolute left-1/2 top-3 z-[500] -translate-x-1/2 rounded-full bg-elevated px-3 py-1 text-xs font-semibold shadow" role="status">{tc("loading")}</div>}
+            <MapView points={points} onBoundsChange={(bbox) => setParam("bbox", bbox)} labels={{ perMonth: tc("perMonth"), bedrooms: tc("bedrooms"), bathrooms: tc("bathrooms") }} />
           </div>
-          <button onClick={() => setMobileMap((m) => !m)} className="btn-dark fixed bottom-20 left-1/2 z-30 -translate-x-1/2 lg:hidden">
+          <button onClick={() => setMobileMap((m) => !m)} className="btn-dark fixed bottom-24 left-1/2 z-30 -translate-x-1/2 lg:hidden" aria-pressed={mobileMap}>
             {mobileMap ? <><List className="h-4 w-4" /> {tc("list")}</> : <><MapIcon className="h-4 w-4" /> {tc("map")}</>}
           </button>
         </div>

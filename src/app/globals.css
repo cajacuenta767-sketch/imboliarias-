@@ -7,7 +7,7 @@
   --bg-muted: #f3efe9;
   --ink: #111827;
   --ink-soft: #4b5563;
-  --ink-muted: #8a8f9a;
+  --ink-muted: #6b7280; /* 4.8:1 sobre --bg: cumple AA para texto pequeño */
   --line: #e7e2da;
   --line-strong: #d6cfc4;
 
@@ -44,7 +44,7 @@
   --bg-muted: #16213a;
   --ink: #f3f4f6;
   --ink-soft: #cbd5e1;
-  --ink-muted: #8a94a6;
+  --ink-muted: #9ca3af;
   --line: #1f2a40;
   --line-strong: #2b3852;
   --brand: #2dd4bf;

@@ -38,20 +38,22 @@ export function HeroSearch({ cities, categories, className }: { cities: Opt[]; c
 
   return (
     <div className={cn("w-full max-w-4xl", className)}>
-      <div className="inline-flex rounded-full bg-white/15 p-1 backdrop-blur-md ring-1 ring-white/25">
+      <div className="inline-flex max-w-full overflow-x-auto rounded-full bg-white/15 p-1 backdrop-blur-md ring-1 ring-white/25" role="tablist" aria-label={t("search")}>
         {tabs.map((tb) => (
-          <button key={tb.v} type="button" onClick={() => setTab(tb.v)} className={cn("rounded-full px-5 py-2 text-sm font-semibold transition", tab === tb.v ? "bg-white text-ink shadow" : "text-white/85 hover:text-white")}>
+          <button key={tb.v} type="button" role="tab" aria-selected={tab === tb.v} onClick={() => setTab(tb.v)} className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:px-5", tab === tb.v ? "bg-white text-ink shadow" : "text-white/85 hover:text-white")}>
             {tb.label}
           </button>
         ))}
       </div>
       <form onSubmit={submit} className="mt-3 grid gap-2 rounded-3xl bg-white/95 p-2.5 shadow-float backdrop-blur-xl md:grid-cols-[1.4fr_1fr_1fr_auto]">
-        <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted">
-          <Search className="h-5 w-5 shrink-0 text-brand" />
+        <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted focus-within:ring-2 focus-within:ring-brand/40">
+          <Search className="h-5 w-5 shrink-0 text-brand" aria-hidden />
+          <span className="sr-only">{t("keyword")}</span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("keyword")} className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted" />
         </label>
-        <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted md:border-l md:border-line">
-          <MapPin className="h-5 w-5 shrink-0 text-brand" />
+        <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted focus-within:ring-2 focus-within:ring-brand/40 md:border-l md:border-line">
+          <MapPin className="h-5 w-5 shrink-0 text-brand" aria-hidden />
+          <span className="sr-only">{t("city")}</span>
           <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full cursor-pointer bg-transparent text-sm text-ink outline-none">
             <option value="">{t("anyCity")}</option>
             {cities.map((c) => (
@@ -60,8 +62,9 @@ export function HeroSearch({ cities, categories, className }: { cities: Opt[]; c
           </select>
         </label>
         {tab !== "PROJECTS" ? (
-          <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted md:border-l md:border-line">
-            <Building2 className="h-5 w-5 shrink-0 text-brand" />
+          <label className="flex items-center gap-2.5 rounded-2xl px-4 py-3 hover:bg-muted focus-within:ring-2 focus-within:ring-brand/40 md:border-l md:border-line">
+            <Building2 className="h-5 w-5 shrink-0 text-brand" aria-hidden />
+            <span className="sr-only">{t("category")}</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full cursor-pointer bg-transparent text-sm text-ink outline-none">
               <option value="">{t("anyCategory")}</option>
               {categories.map((c) => (

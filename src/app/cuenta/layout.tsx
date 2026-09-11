@@ -14,7 +14,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   return (
     <>
       <SiteHeader />
-      <main className="min-h-[70vh] bg-muted/40">
+      <main id="contenido" className="min-h-[70vh] bg-muted/40">
         <AccountShell credits={u?.credits ?? 0} role={u?.role ?? "CUSTOMER"}>{children}</AccountShell>
       </main>
       <SiteFooter />

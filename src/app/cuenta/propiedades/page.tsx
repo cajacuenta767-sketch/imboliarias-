@@ -5,11 +5,12 @@ import { propertyQuerySchema } from "@/server/modules/properties/schema";
 import { listProperties } from "@/server/modules/properties/service";
 import { PageHeader } from "@/components/ui/misc";
 import { MyPropertiesTable } from "@/components/account/my-properties-table";
+import { parseSearchParams } from "@/server/lib/query";
 
 export default async function MyProperties({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const q = propertyQuerySchema.parse({ ...sp, scope: "mine", perPage: "10" });
+  const q = parseSearchParams(propertyQuerySchema, sp, { scope: "mine", perPage: "10" });
   const { items, meta } = await listProperties(q, user);
   return (
     <div>

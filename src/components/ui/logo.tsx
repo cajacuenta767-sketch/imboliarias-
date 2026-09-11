@@ -18,14 +18,21 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ name = "Habitta", light = false, href = "/", className }: { name?: string; light?: boolean; href?: string; className?: string }) {
+/** Logo del sitio: usa la imagen configurada en Apariencia (logo_url) o, si no hay, la marca por defecto. */
+export function Logo({ name = "Habitta", light = false, href = "/", className, src }: { name?: string; light?: boolean; href?: string; className?: string; src?: string | null }) {
   return (
-    <Link href={href} className={cn("inline-flex items-center gap-2.5 font-display text-xl font-extrabold tracking-tight", light ? "text-white" : "text-ink", className)}>
-      <LogoMark />
-      <span>
-        {name}
-        <span className="text-brand">.</span>
-      </span>
+    <Link href={href} className={cn("inline-flex items-center gap-2.5 font-display text-xl font-extrabold tracking-tight", light ? "text-white" : "text-ink", className)} aria-label={name}>
+      {src ? (
+        <img src={src} alt={name} className="h-9 w-auto max-w-[180px] object-contain" width={160} height={36} />
+      ) : (
+        <>
+          <LogoMark />
+          <span>
+            {name}
+            <span className="text-brand">.</span>
+          </span>
+        </>
+      )}
     </Link>
   );
 }

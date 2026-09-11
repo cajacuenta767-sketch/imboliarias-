@@ -3,7 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { PropertyListing } from "@/components/site/listing";
 import { propertyQuerySchema } from "@/server/modules/properties/schema";
 import { listProperties } from "@/server/modules/properties/service";
-import { listCities } from "@/server/modules/locations/service";
+import { cityOptions } from "@/server/modules/locations/service";
+import { parseSearchParams } from "@/server/lib/query";
 import { listCategories } from "@/server/modules/categories/service";
 import { listFeatures } from "@/server/modules/features/service";
 
@@ -21,9 +22,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 export default async function PropertiesPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const t = await getTranslations("list");
-  const parsed = propertyQuerySchema.safeParse({ ...sp, perPage: sp.view === "map" ? "10" : "12" });
-  const q = parsed.success ? parsed.data : propertyQuerySchema.parse({});
-  const [{ items, meta }, cities, categories, features] = await Promise.all([listProperties(q), listCities(), listCategories(true), listFeatures(true)]);
+  const q = parseSearchParams(propertyQuerySchema, sp, { perPage: sp.view === "map" ? "10" : "12" });
+  const [{ items, meta }, cities, categories, features] = await Promise.all([listProperties(q), cityOptions(), listCategories(true), listFeatures(true)]);
   const title = q.type === "SALE" ? t("titleSale") : q.type === "RENT" ? t("titleRent") : t("titleAll");
   const mapQuery = new URLSearchParams(Object.entries(sp).flatMap(([k, v]) => (typeof v === "string" && k !== "page" && k !== "view" && k !== "bbox" ? [[k, v]] : []))).toString();
 

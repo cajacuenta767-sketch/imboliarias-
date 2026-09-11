@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PostCard } from "@/components/site/cards";
 import { Pagination } from "@/components/ui/pagination";
 import { listPostCategories, listPosts, postQuerySchema } from "@/server/modules/posts/service";
+import { parseSearchParams } from "@/server/lib/query";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +11,8 @@ export const metadata: Metadata = { title: "Noticias" };
 
 export default async function BlogPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const q = postQuerySchema.parse({ ...sp, perPage: "9" });
-  const [{ items, meta }, cats] = await Promise.all([listPosts(q), listPostCategories()]);
+  const q = parseSearchParams(postQuerySchema, sp, { perPage: "9" });
+  const [{ items, meta }, cats] = await Promise.all([listPosts(q), listPostCategories(true)]);
   const [first, ...rest] = items;
   return (
     <div className="container-x py-10">

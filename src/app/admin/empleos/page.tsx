@@ -2,9 +2,10 @@ import { applicationQuerySchema, listApplications, listCareers } from "@/server/
 import { PageHeader } from "@/components/ui/misc";
 import { CareersTable } from "@/components/admin/content-table";
 import { ApplicationsTable } from "@/components/admin/applications-table";
+import { parseSearchParams } from "@/server/lib/query";
 
 export default async function AdminCareers({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const [careers, apps] = await Promise.all([listCareers(), listApplications(applicationQuerySchema.parse({ ...(await searchParams), perPage: "10" }))]);
+  const [careers, apps] = await Promise.all([listCareers(), listApplications(parseSearchParams(applicationQuerySchema, await searchParams, { perPage: "10" }))]);
   return (
     <div>
       <PageHeader title="Carreras" subtitle="Vacantes publicadas y postulaciones recibidas." />

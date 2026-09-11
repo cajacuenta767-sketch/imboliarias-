@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { MODERATION_STATUSES, PROPERTY_STATUSES, PROPERTY_TYPES, RENT_PERIODS } from "@/lib/constants";
 import { paginationSchema } from "@/server/lib/pagination";
+import { optionalDate, optionalInt, optionalNumber } from "@/server/lib/query";
 
 export const propertyInputSchema = z.object({
-  title: z.string().min(5, "El título es muy corto").max(160),
+  title: z.string().trim().min(5, "El título es muy corto").max(160),
   description: z.string().max(600).optional().nullable(),
   content: z.string().optional().nullable(),
   type: z.enum(PROPERTY_TYPES),
@@ -35,7 +36,7 @@ export const propertyInputSchema = z.object({
   translations: z
     .array(z.object({ locale: z.string(), field: z.string(), value: z.string() }))
     .default([]),
-  expiresAt: z.coerce.date().optional().nullable(),
+  expiresAt: optionalDate(),
 });
 export type PropertyInput = z.infer<typeof propertyInputSchema>;
 
@@ -44,12 +45,12 @@ export const propertyQuerySchema = paginationSchema.extend({
   type: z.enum(PROPERTY_TYPES).optional(),
   city: z.string().optional(), // slug o id
   category: z.string().optional(), // slug o id
-  minPrice: z.coerce.number().optional(),
-  maxPrice: z.coerce.number().optional(),
-  minArea: z.coerce.number().optional(),
-  maxArea: z.coerce.number().optional(),
-  bedrooms: z.coerce.number().int().optional(),
-  bathrooms: z.coerce.number().int().optional(),
+  minPrice: optionalNumber(),
+  maxPrice: optionalNumber(),
+  minArea: optionalNumber(),
+  maxArea: optionalNumber(),
+  bedrooms: optionalInt(),
+  bathrooms: optionalInt(),
   features: z
     .union([z.string(), z.array(z.string())])
     .transform((v) => (Array.isArray(v) ? v : v.split(",").filter(Boolean)))

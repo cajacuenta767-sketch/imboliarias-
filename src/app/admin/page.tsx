@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Building2, Clock, Users, MessageSquare, Receipt, Eye, FolderKanban, Star, ArrowRight, TrendingUp } from "lucide-react";
 import { adminStats } from "@/server/modules/dashboard/service";
-import { ActivityChart, CityChart, RevenueChart } from "@/components/admin/dashboard-charts";
+import { ActivityChart, CityChart, RevenueChart } from "@/components/admin/dashboard-charts-lazy";
 import { PageHeader } from "@/components/ui/misc";
 import { StatusBadge } from "@/components/ui/badge";
 import { SmartImage } from "@/components/ui/smart-image";

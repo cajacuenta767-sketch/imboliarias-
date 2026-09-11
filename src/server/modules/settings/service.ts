@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { db } from "@/server/db";
+import { HttpError } from "@/server/errors";
 
 export const DEFAULT_SETTINGS: Record<string, { value: string; group: string }> = {
   site_name: { value: "Habitta", group: "general" },
@@ -33,20 +35,51 @@ export const DEFAULT_SETTINGS: Record<string, { value: string; group: string }> 
   footer_text: { value: "Habitta es la forma más simple de encontrar, publicar y vender propiedades.", group: "appearance" },
 };
 
-export async function getSettings(): Promise<Record<string, string>> {
+/** Se memoriza por petición (React cache): el layout, el pie y las páginas comparten una sola consulta. */
+export const getSettings = cache(async (): Promise<Record<string, string>> => {
   const rows = await db.setting.findMany();
   const out: Record<string, string> = {};
   for (const k of Object.keys(DEFAULT_SETTINGS)) out[k] = DEFAULT_SETTINGS[k].value;
   for (const r of rows) out[r.key] = r.value;
   return out;
-}
+});
 
 export async function getSetting(key: string) {
   const s = await getSettings();
   return s[key];
 }
 
-export async function updateSettings(values: Record<string, string>) {
+const NUMERIC_KEYS: Record<string, { min: number; max: number; int?: boolean }> = {
+  listing_days: { min: 1, max: 3650, int: true },
+  credits_per_listing: { min: 0, max: 1000, int: true },
+  credits_per_featured: { min: 0, max: 1000, int: true },
+  free_credits_on_signup: { min: 0, max: 1000, int: true },
+  tax_percent: { min: 0, max: 100 },
+};
+
+/** Valida y normaliza los valores numéricos (acepta coma decimal) antes de guardarlos. */
+export function normalizeSettings(values: Record<string, string>) {
+  const errors: Record<string, string[]> = {};
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(values)) {
+    const rule = NUMERIC_KEYS[key];
+    if (!rule) {
+      out[key] = raw;
+      continue;
+    }
+    const n = Number(String(raw).trim().replace(",", "."));
+    if (!Number.isFinite(n) || n < rule.min || n > rule.max || (rule.int && !Number.isInteger(n))) {
+      errors[key] = [`Debe ser un número${rule.int ? " entero" : ""} entre ${rule.min} y ${rule.max}`];
+      continue;
+    }
+    out[key] = String(n);
+  }
+  return { values: out, errors };
+}
+
+export async function updateSettings(raw: Record<string, string>) {
+  const { values, errors } = normalizeSettings(raw);
+  if (Object.keys(errors).length) throw new HttpError(422, "Datos inválidos", errors);
   const ops = Object.entries(values).map(([key, value]) =>
     db.setting.upsert({
       where: { key },

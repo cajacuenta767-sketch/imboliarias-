@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { useDialog } from "@/lib/hooks/use-dialog";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Heart, Menu, Plus, X, User, LayoutDashboard, LogOut, ChevronDown, Phone, Mail } from "lucide-react";
@@ -18,10 +19,13 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   const t = useTranslations("nav");
   const s = useSettings();
+  const tc = useTranslations("common");
   const pathname = usePathname();
+  const sp = useSearchParams();
   const { data: session } = useSession();
   const { ids } = useWishlist();
   const [open, setOpen] = useState(false);
+  const drawerRef = useDialog(open, () => setOpen(false));
   const user = session?.user;
 
   const links = [
@@ -32,7 +36,13 @@ export function SiteHeader() {
     { href: "/noticias", label: t("blog") },
     { href: "/contacto", label: t("contact") },
   ];
-  const isActive = (href: string) => pathname === href.split("?")[0] && (href.includes("?") ? typeof window !== "undefined" && window.location.search === "?" + href.split("?")[1] : true);
+  const isActive = (href: string) => {
+    const [path, query] = href.split("?");
+    if (pathname !== path) return false;
+    if (!query) return true;
+    const want = new URLSearchParams(query);
+    return Array.from(want.entries()).every(([k, v]) => sp.get(k) === v);
+  };
 
   return (
     <header className="sticky top-0 z-40">
@@ -59,12 +69,13 @@ export function SiteHeader() {
       {/* Navegación principal */}
       <div className="border-b border-line/70 bg-bg/85 backdrop-blur-xl">
         <div className="container-x flex h-[72px] items-center justify-between gap-6">
-          <Logo name={s.site_name} />
-          <nav className="hidden items-center gap-1 lg:flex">
+          <Logo name={s.site_name} src={s.logo_url} />
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
+                aria-current={isActive(l.href) ? "page" : undefined}
                 className={cn("rounded-full px-3.5 py-2 text-sm font-semibold text-ink-soft transition hover:bg-muted hover:text-ink", isActive(l.href) && "bg-brand-soft text-brand-strong")}
               >
                 {l.label}
@@ -81,10 +92,11 @@ export function SiteHeader() {
             </Link>
             {user ? (
               <Dropdown
+                label={t("account")}
                 trigger={
-                  <button className="flex items-center gap-2 rounded-full border border-line bg-elevated py-1 pl-1 pr-2.5 hover:border-brand">
+                  <button className="flex items-center gap-2 rounded-full border border-line bg-elevated py-1 pl-1 pr-2.5 hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50">
                     <Avatar src={user.image} name={user.name ?? "U"} size="sm" />
-                    <ChevronDown className="h-4 w-4 text-ink-muted" />
+                    <ChevronDown className="h-4 w-4 text-ink-muted" aria-hidden />
                   </button>
                 }
               >
@@ -92,15 +104,15 @@ export function SiteHeader() {
                   <p className="truncate text-sm font-semibold">{user.name}</p>
                   <p className="truncate text-xs text-ink-muted">{user.email}</p>
                 </div>
-                <Link href="/cuenta"><DropdownItem><User className="h-4 w-4" /> {t("account")}</DropdownItem></Link>
-                {user.role === "ADMIN" && <Link href="/admin"><DropdownItem><LayoutDashboard className="h-4 w-4" /> {t("admin")}</DropdownItem></Link>}
-                <Link href="/favoritos"><DropdownItem><Heart className="h-4 w-4" /> {t("wishlist")}</DropdownItem></Link>
+                <DropdownItem href="/cuenta"><User className="h-4 w-4" /> {t("account")}</DropdownItem>
+                {user.role === "ADMIN" && <DropdownItem href="/admin"><LayoutDashboard className="h-4 w-4" /> {t("admin")}</DropdownItem>}
+                <DropdownItem href="/favoritos"><Heart className="h-4 w-4" /> {t("wishlist")}</DropdownItem>
                 <DropdownItem onClick={() => signOut({ callbackUrl: "/" })} className="text-danger"><LogOut className="h-4 w-4" /> {t("logout")}</DropdownItem>
               </Dropdown>
             ) : (
               <Link href="/ingresar" className="btn-outline hidden sm:inline-flex">{t("login")}</Link>
             )}
-            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted lg:hidden" onClick={() => setOpen(true)} aria-label="Menú">
+            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted lg:hidden" onClick={() => setOpen(true)} aria-label={tc("menu")} aria-expanded={open} aria-haspopup="dialog">
               <Menu className="h-5 w-5" />
             </button>
           </div>
@@ -110,13 +122,13 @@ export function SiteHeader() {
       {/* Menú móvil */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 right-0 flex w-[85%] max-w-sm flex-col bg-elevated p-5 shadow-float animate-fade-up">
+          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
+          <div ref={drawerRef} role="dialog" aria-modal="true" aria-label={tc("menu")} tabIndex={-1} className="absolute inset-y-0 right-0 flex w-[85%] max-w-sm flex-col overflow-y-auto bg-elevated p-5 shadow-float animate-fade-up outline-none">
             <div className="flex items-center justify-between">
-              <Logo name={s.site_name} />
-              <button onClick={() => setOpen(false)} className="rounded-full p-2 hover:bg-muted" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+              <Logo name={s.site_name} src={s.logo_url} />
+              <button onClick={() => setOpen(false)} className="rounded-full p-2 hover:bg-muted" aria-label={tc("close")}><X className="h-5 w-5" /></button>
             </div>
-            <nav className="mt-6 flex flex-col gap-1">
+            <nav className="mt-6 flex flex-col gap-1" aria-label="Principal">
               {links.map((l) => (
                 <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-base font-semibold text-ink hover:bg-muted">{l.label}</Link>
               ))}

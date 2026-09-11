@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { Check, MapPin, Play, Share2, Eye, Calendar, Hash, Building2, Maximize2, BedDouble, Bath, Car, Layers, CalendarClock, Tag, Navigation } from "lucide-react";
+import { Check, MapPin, Share2, Eye, Calendar, Hash, Building2, Maximize2, BedDouble, Bath, Car, Layers, CalendarClock, Tag, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { Gallery } from "@/components/site/gallery";
 import { Tabs } from "@/components/ui/tabs";
@@ -24,13 +24,15 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
   const [video, setVideo] = useState(false);
   const embed = youtubeEmbed(p.videoUrl);
   const cityLabel = p.city ? `${p.city.name}, ${p.city.state.name}` : p.address;
+  const mapPoints = useMemo(() => [{ id: p.id, slug: p.slug, title: p.title, price: p.price, currencyCode: p.currencyCode, type: p.type, lat: p.lat, lng: p.lng }], [p.id, p.slug, p.title, p.price, p.currencyCode, p.type, p.lat, p.lng]);
+  const mapCenter = useMemo<[number, number] | undefined>(() => (p.lat != null && p.lng != null ? [p.lat, p.lng] : undefined), [p.lat, p.lng]);
 
   const share = async () => {
     const url = window.location.href;
     if (navigator.share) await navigator.share({ title: p.title, url }).catch(() => undefined);
     else {
       await navigator.clipboard.writeText(url);
-      toast.success("Enlace copiado");
+      toast.success(t("linkCopied"));
     }
   };
 
@@ -67,7 +69,7 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className={cn("chip", p.type === "SALE" ? "bg-brand-soft text-brand-strong" : "bg-rent-soft text-rent")}>{STATUS_LABELS[p.type]}</span>
             {p.category && <span className="chip bg-muted text-ink-soft">{p.category.name}</span>}
-            {p.isFeatured && <span className="chip bg-accent-soft text-accent-strong">Destacada</span>}
+            {p.isFeatured && <span className="chip bg-accent-soft text-accent-strong">{t("featuredBadge")}</span>}
             {rating.count > 0 && <Stars value={rating.avg} count={rating.count} />}
           </div>
           <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-4xl">{p.title}</h1>
@@ -123,7 +125,7 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
                   {f.feature.name}
                 </li>
               ))}
-              {p.features.length === 0 && <li className="text-sm text-ink-muted">Sin características registradas.</li>}
+              {p.features.length === 0 && <li className="text-sm text-ink-muted">{t("noFeatures")}</li>}
             </ul>
           )}
           {tab === "nearby" && (
@@ -134,17 +136,17 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
                   <span className="text-ink-muted">{f.distance}</span>
                 </li>
               ))}
-              {p.facilities.length === 0 && <li className="text-sm text-ink-muted">Sin lugares cercanos registrados.</li>}
+              {p.facilities.length === 0 && <li className="text-sm text-ink-muted">{t("noNearby")}</li>}
             </ul>
           )}
           {tab === "location" && (
             <div className="space-y-3">
               {p.address && <p className="text-sm text-ink-soft"><MapPin className="mr-1 inline h-4 w-4 text-brand" /> {p.address}</p>}
-              <div className="h-[380px] overflow-hidden rounded-3xl border border-line">
-                {p.lat != null && p.lng != null ? (
-                  <MapView single points={[{ id: p.id, slug: p.slug, title: p.title, price: p.price, currencyCode: p.currencyCode, type: p.type, lat: p.lat, lng: p.lng }]} center={[p.lat, p.lng]} zoom={15} />
+              <div className="h-[260px] overflow-hidden rounded-3xl border border-line sm:h-[380px]">
+                {mapCenter ? (
+                  <MapView single points={mapPoints} center={mapCenter} zoom={15} />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-ink-muted">Ubicación no disponible</div>
+                  <div className="flex h-full items-center justify-center text-sm text-ink-muted">{t("noLocation")}</div>
                 )}
               </div>
             </div>
@@ -165,7 +167,6 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
           </div>
         )}
       </Modal>
-      <span className="hidden"><Play /></span>
     </>
   );
 }

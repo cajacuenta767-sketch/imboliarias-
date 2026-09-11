@@ -4,10 +4,11 @@ import { listProperties } from "@/server/modules/properties/service";
 import { db } from "@/server/db";
 import { PageHeader } from "@/components/ui/misc";
 import { AdminPropertiesTable } from "@/components/admin/properties-table";
+import { parseSearchParams } from "@/server/lib/query";
 
 export default async function AdminProperties({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requireAdmin();
-  const q = propertyQuerySchema.parse({ ...(await searchParams), scope: "admin", perPage: "15" });
+  const q = parseSearchParams(propertyQuerySchema, await searchParams, { scope: "admin", perPage: "15" });
   const { items, meta } = await listProperties(q, user);
   const authors = await db.user.findMany({ where: { id: { in: items.map((i) => i.authorId) } }, select: { id: true, name: true } });
   const rows = items.map((i) => ({ ...i, author: authors.find((a) => a.id === i.authorId) }));

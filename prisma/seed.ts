@@ -30,7 +30,7 @@ const PHOTOS = {
   land: ["photo-1500382017468-9049fed747ef", "photo-1464822759023-fed622ff2c3b"],
 };
 
-const AVATARS = [
+const AVATARS = LOCAL ? [null, null, null, null, null] : [
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80",
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80",
   "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&q=80",
@@ -238,7 +238,7 @@ async function main() {
         slug: slug(p.title),
         title: p.title,
         description: p.desc,
-        content: `<p>${p.desc}</p><h2>Distribución</h2><p>${p.bed > 0 ? `${p.bed} habitaciones y ${p.bath} baños` : `${p.area} m² de área útil`}, con excelente iluminación natural y espacios pensados para el día a día.</p><h2>Entorno</h2><p>Sector consolidado con transporte, comercio y zonas verdes a pocos minutos.</p>`,
+        content: `<h2>Distribución</h2><p>${p.bed > 0 ? `${p.bed} habitaciones y ${p.bath} baños` : `${p.area} m² de área útil`}, con excelente iluminación natural y espacios pensados para el día a día.</p><h2>Entorno</h2><p>Sector consolidado con transporte, comercio y zonas verdes a pocos minutos.</p>`,
         type: p.type,
         status: p.status ?? "AVAILABLE",
         moderation: p.moderation ?? "APPROVED",
@@ -348,6 +348,7 @@ async function main() {
   await db.setting.createMany({
     data: [
       { key: "site_name", value: "Habitta", group: "general" },
+      ...(LOCAL ? [{ key: "hero_image", value: "/demo/photo-4.svg", group: "appearance" }] : []),
       { key: "contact_whatsapp", value: "573001112233", group: "contact" },
       { key: "contact_phone", value: "+57 300 111 2233", group: "contact" },
       { key: "contact_email", value: "hola@habitta.test", group: "contact" },

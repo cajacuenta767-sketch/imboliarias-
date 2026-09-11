@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { MapPin, Briefcase, Clock, Banknote } from "lucide-react";
 import { getCareerBySlug } from "@/server/modules/careers/service";
@@ -9,14 +10,14 @@ import { ApplyForm } from "@/components/site/apply-form";
 
 export const dynamic = "force-dynamic";
 
-async function load(slug: string) {
+const load = cache(async (slug: string) => {
   try {
     return await getCareerBySlug(slug);
   } catch (e) {
     if (e instanceof HttpError && e.status === 404) return null;
     throw e;
   }
-}
+});
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const c = await load((await params).slug);
   return { title: c?.title ?? "Vacante" };

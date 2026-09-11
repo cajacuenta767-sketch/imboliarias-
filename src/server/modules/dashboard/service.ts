@@ -26,12 +26,14 @@ export async function adminStats() {
     months.push({ label: start.toLocaleDateString("es-CO", { month: "short" }), start, end });
   }
   const series = await Promise.all(
-    months.map(async (m) => ({
-      month: m.label,
-      propiedades: await db.property.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
-      consultas: await db.inquiry.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
-      ingresos: (await db.invoice.aggregate({ where: { status: "PAID", paidAt: { gte: m.start, lt: m.end } }, _sum: { total: true } }))._sum.total ?? 0,
-    })),
+    months.map(async (m) => {
+      const [propiedades, consultas, ingresos] = await Promise.all([
+        db.property.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
+        db.inquiry.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
+        db.invoice.aggregate({ where: { status: "PAID", paidAt: { gte: m.start, lt: m.end } }, _sum: { total: true } }),
+      ]);
+      return { month: m.label, propiedades, consultas, ingresos: ingresos._sum.total ?? 0 };
+    }),
   );
 
   const byCity = await db.city.findMany({ select: { name: true, _count: { select: { properties: true } } }, orderBy: { properties: { _count: "desc" } }, take: 6 });

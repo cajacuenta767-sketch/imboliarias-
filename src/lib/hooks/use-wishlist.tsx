@@ -15,15 +15,25 @@ export function WishlistProvider({ enabled, children }: { enabled: boolean; chil
   }, [enabled]);
 
   const toggle = useCallback(async (id: string) => {
-    const r = await apiPost<{ saved: boolean }>("/api/v1/wishlist", { propertyId: id });
-    setIds((prev) => {
-      const next = new Set(prev);
-      if (r.data.saved) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-    return r.data.saved;
-  }, []);
+    // Actualización optimista con reversión si la petición falla.
+    const apply = (saved: boolean) =>
+      setIds((prev) => {
+        const next = new Set(prev);
+        if (saved) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    const wasSaved = ids.has(id);
+    apply(!wasSaved);
+    try {
+      const r = await apiPost<{ saved: boolean }>("/api/v1/wishlist", { propertyId: id });
+      apply(r.data.saved);
+      return r.data.saved;
+    } catch (e) {
+      apply(wasSaved);
+      throw e;
+    }
+  }, [ids]);
 
   return <Ctx.Provider value={{ ids, has: (id) => ids.has(id), toggle, enabled }}>{children}</Ctx.Provider>;
 }

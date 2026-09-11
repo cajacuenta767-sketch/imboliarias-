@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Layers, Home, CalendarCheck, Building2, Check, Navigation } from "lucide-react";
@@ -15,14 +16,14 @@ import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-async function load(slug: string) {
+const load = cache(async (slug: string) => {
   try {
     return await getProjectBySlug(slug, true);
   } catch (e) {
     if (e instanceof HttpError && e.status === 404) return null;
     throw e;
   }
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const p = await load((await params).slug);

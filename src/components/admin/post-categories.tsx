@@ -17,11 +17,11 @@ export function PostCategoriesManager({ categories }: { categories: { id: string
       <Modal open={open} onClose={() => setOpen(false)} title="Categorías del blog" size="sm">
         <div className="space-y-3 p-5">
           <form onSubmit={async (e) => { e.preventDefault(); try { await apiPost("/api/v1/post-categories", { name }); setName(""); toast.success("Categoría creada"); router.refresh(); } catch (err) { toast.error((err as Error).message); } }} className="flex gap-2">
-            <input className="input" placeholder="Nueva categoría" value={name} onChange={(e) => setName(e.target.value)} required /><button className="btn-primary"><Plus className="h-4 w-4" /></button>
+            <input className="input" placeholder="Nueva categoría" aria-label="Nueva categoría" value={name} onChange={(e) => setName(e.target.value)} required /><button className="btn-primary" aria-label="Crear categoría"><Plus className="h-4 w-4" /></button>
           </form>
           <ul className="divide-y divide-line">
             {categories.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 text-sm"><span>{c.name} <span className="text-ink-muted">({c._count.posts})</span></span><button onClick={async () => { if (!confirm("¿Eliminar categoría?")) return; await apiDelete(`/api/v1/post-categories/${c.id}`); router.refresh(); }} className="text-danger"><Trash2 className="h-4 w-4" /></button></li>
+              <li key={c.id} className="flex items-center justify-between py-2 text-sm"><span>{c.name} <span className="text-ink-muted">({c._count.posts})</span></span><button onClick={async () => { if (!confirm("¿Eliminar categoría?")) return; try { await apiDelete(`/api/v1/post-categories/${c.id}`); toast.success("Categoría eliminada"); router.refresh(); } catch (err) { toast.error((err as Error).message); } }} className="rounded p-1 text-danger hover:bg-red-50" aria-label={`Eliminar ${c.name}`}><Trash2 className="h-4 w-4" /></button></li>
             ))}
           </ul>
         </div>

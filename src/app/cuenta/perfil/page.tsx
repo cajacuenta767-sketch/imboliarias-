@@ -6,9 +6,7 @@ import { ProfileForm } from "@/components/account/profile-form";
 
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [u, cities] = await Promise.all([getUser(user.id), listCities()]);
-  const { passwordHash, ...safe } = u;
-  void passwordHash;
+  const [safe, cities] = await Promise.all([getUser(user.id), listCities()]);
   return (
     <div>
       <PageHeader title="Mi perfil" subtitle="Tus datos de contacto y tu perfil público como asesor." />

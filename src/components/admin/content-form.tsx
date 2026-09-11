@@ -7,7 +7,9 @@ import { Save, LogOut } from "lucide-react";
 import { apiPost, apiPut, ApiError } from "@/lib/api";
 import { Field, Spinner } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
-import { RichEditor } from "@/components/shared/rich-editor";
+import dynamic from "next/dynamic";
+
+const RichEditor = dynamic(() => import("@/components/shared/rich-editor").then((m) => m.RichEditor), { ssr: false, loading: () => <div className="input min-h-[220px] animate-pulse" /> });
 import { SingleImageInput } from "@/components/shared/image-uploader";
 
 export type ContentField = { key: string; label: string; type?: "text" | "textarea" | "number" | "select" | "boolean" | "image" | "date" | "rich"; options?: { value: string; label: string }[]; hint?: string; required?: boolean; side?: boolean; half?: boolean };

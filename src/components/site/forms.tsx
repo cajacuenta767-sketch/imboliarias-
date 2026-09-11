@@ -11,7 +11,7 @@ import { Field, Spinner } from "@/components/ui/misc";
 export function InquiryForm({ propertyId, projectId, defaultMessage, whatsapp, phone, compact }: { propertyId?: string; projectId?: string; defaultMessage?: string; whatsapp?: string | null; phone?: string | null; compact?: boolean }) {
   const t = useTranslations("property");
   const tc = useTranslations("common");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: defaultMessage ?? "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: defaultMessage ?? "", website: "" });
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -26,7 +26,7 @@ export function InquiryForm({ propertyId, projectId, defaultMessage, whatsapp, p
       toast.success(t("inquirySent"));
     } catch (err) {
       if (err instanceof ApiError && err.details) setErrors(err.details);
-      toast.error((err as Error).message);
+      else toast.error((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -43,6 +43,8 @@ export function InquiryForm({ propertyId, projectId, defaultMessage, whatsapp, p
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {/* Honeypot: invisible para personas; si un bot lo rellena, el servidor rechaza el envío. */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
       <Field error={errors.name?.[0]}>
         <input className="input" placeholder={tc("name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
       </Field>
@@ -57,7 +59,7 @@ export function InquiryForm({ propertyId, projectId, defaultMessage, whatsapp, p
       <Field error={errors.message?.[0]}>
         <textarea className="input min-h-[110px]" placeholder={tc("message")} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
       </Field>
-      <button type="submit" disabled={loading} className="btn-primary w-full">
+      <button type="submit" disabled={loading} aria-busy={loading} className="btn-primary w-full">
         {loading ? <Spinner /> : <Send className="h-4 w-4" />} {loading ? tc("sending") : t("requestVisit")}
       </button>
       {(whatsapp || phone) && (
@@ -78,6 +80,7 @@ export function InquiryForm({ propertyId, projectId, defaultMessage, whatsapp, p
 
 export function ReviewForm({ propertyId }: { propertyId: string }) {
   const t = useTranslations("property");
+  const tc = useTranslations("common");
   const [rating, setRating] = useState(5);
   const [authorName, setAuthorName] = useState("");
   const [comment, setComment] = useState("");
@@ -105,11 +108,8 @@ export function ReviewForm({ propertyId }: { propertyId: string }) {
       </Field>
       <input className="input" placeholder={t("yourName")} value={authorName} onChange={(e) => setAuthorName(e.target.value)} required />
       <textarea className="input min-h-[90px]" placeholder={t("yourComment")} value={comment} onChange={(e) => setComment(e.target.value)} required />
-      <button className="btn-primary" disabled={loading}>{loading ? <Spinner /> : null} {t("writeReview")}</button>
+      <button type="submit" className="btn-primary" disabled={loading} aria-busy={loading}>{loading ? <Spinner /> : null} {loading ? tc("sending") : t("writeReview")}</button>
     </form>
   );
 }
 
-export function ContactPageForm() {
-  return <InquiryForm />;
-}

@@ -193,7 +193,14 @@ model Property {
 
   @@index([type, status, moderation])
   @@index([cityId])
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([agentId])
   @@index([price])
+  @@index([createdAt])
+  @@index([views])
+  @@index([expiresAt])
+  @@index([isFeatured])
 }
 
 model PropertyImage {
@@ -323,6 +330,8 @@ model Review {
   comment    String
   status     String   @default("PENDING") // PENDING | APPROVED | REJECTED
   createdAt  DateTime @default(now())
+
+  @@index([propertyId, status])
 }
 
 model Inquiry {
@@ -339,6 +348,9 @@ model Inquiry {
   ownerId    String?   // agente/usuario dueño de la propiedad
   owner      User?     @relation("InquiryOwner", fields: [ownerId], references: [id])
   createdAt  DateTime  @default(now())
+
+  @@index([ownerId, status])
+  @@index([createdAt])
 }
 
 model Wishlist {
@@ -374,6 +386,8 @@ model Coupon {
   value       Float
   maxUses     Int?
   usedCount   Int       @default(0)
+  minAmount   Float     @default(0)       // compra mínima para aplicar
+  currencyCode String   @default("USD")   // moneda del descuento fijo / del mínimo
   expiresAt   DateTime?
   isActive    Boolean   @default(true)
   invoices    Invoice[]
@@ -391,12 +405,16 @@ model Invoice {
   subtotal   Float
   discount   Float     @default(0)
   tax        Float     @default(0)
+  taxPercent Float     @default(0)   // porcentaje aplicado en el momento de emitir
   total      Float
   currencyCode String  @default("USD")
   status     String    @default("PENDING") // PENDING | PAID | CANCELLED | REFUNDED
   paidAt     DateTime?
   createdAt  DateTime  @default(now())
   payments   Payment[]
+
+  @@index([userId, createdAt])
+  @@index([status, paidAt])
 }
 
 model Payment {

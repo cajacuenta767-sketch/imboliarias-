@@ -8,12 +8,12 @@ import { Save, LogOut } from "lucide-react";
 import { apiPost, apiPut, ApiError } from "@/lib/api";
 import { Field, Spinner } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
-import { RichEditor } from "@/components/shared/rich-editor";
 import { ImageUploader, type ImageItem } from "@/components/shared/image-uploader";
 import { PROJECT_STATUSES, STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const MapPicker = dynamic(() => import("@/components/shared/map-picker").then((m) => m.MapPicker), { ssr: false });
+const MapPicker = dynamic(() => import("@/components/shared/map-picker").then((m) => m.MapPicker), { ssr: false, loading: () => <div className="h-[320px] animate-pulse rounded-2xl bg-muted" /> });
+const RichEditor = dynamic(() => import("@/components/shared/rich-editor").then((m) => m.RichEditor), { ssr: false, loading: () => <div className="input min-h-[220px] animate-pulse" /> });
 
 export type ProjectFormValues = { name: string; description: string; content: string; status: string; priceFrom: number | ""; priceTo: number | ""; currencyCode: string; address: string; lat: number | null; lng: number | null; units: number | ""; floors: number | ""; finishAt: string; videoUrl: string; isFeatured: boolean; cityId: string; categoryId: string; investorId: string; images: ImageItem[]; featureIds: string[]; facilities: { facilityId: string; distance: string }[] };
 type Opt = { id: string; name: string };

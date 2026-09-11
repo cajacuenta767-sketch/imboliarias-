@@ -17,7 +17,11 @@
     "logout": "Sign out"
   },
   "hero": {
-    "tabs": { "sale": "Buy", "rent": "Rent", "projects": "Projects" },
+    "tabs": {
+      "sale": "Buy",
+      "rent": "Rent",
+      "projects": "Projects"
+    },
     "keyword": "What are you looking for? Neighborhood, city, code…",
     "city": "City",
     "anyCity": "All cities",
@@ -59,7 +63,15 @@
     "filters": "Filters",
     "apply": "Apply",
     "language": "Language",
-    "currency": "Currency"
+    "currency": "Currency",
+    "sortLabel": "Sort results",
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "viewMap": "Map view",
+    "skipToContent": "Skip to content",
+    "menu": "Menu",
+    "close": "Close",
+    "mapError": "We couldn't load the map."
   },
   "home": {
     "featuredProjects": "Featured projects",
@@ -79,7 +91,12 @@
     "ctaTitle": "Do you have a property to sell or rent?",
     "ctaText": "List it in minutes and reach thousands of people looking for exactly what you offer.",
     "ctaButton": "List now",
-    "stats": { "properties": "Active listings", "cities": "Cities", "agents": "Advisors", "clients": "Happy clients" }
+    "stats": {
+      "properties": "Active listings",
+      "cities": "Cities",
+      "agents": "Advisors",
+      "clients": "Happy clients"
+    }
   },
   "property": {
     "overview": "Overview",
@@ -116,7 +133,17 @@
     "yourComment": "Your comment",
     "reviewSent": "Thanks! Your review will be published after moderation.",
     "inquirySent": "Message sent. The advisor will contact you soon.",
-    "requestVisit": "Request a visit"
+    "requestVisit": "Request a visit",
+    "savedToast": "Saved to favorites",
+    "removedToast": "Removed from favorites",
+    "loginToSave": "Sign in to save favorites",
+    "removeFromSaved": "Remove from favorites",
+    "addToSaved": "Save to favorites",
+    "featuredBadge": "Featured",
+    "noFeatures": "No features listed.",
+    "noNearby": "No nearby places listed.",
+    "noLocation": "Location not available",
+    "linkCopied": "Link copied"
   },
   "list": {
     "titleAll": "Properties",
@@ -130,7 +157,13 @@
     "bedrooms": "Bedrooms",
     "bathrooms": "Bathrooms",
     "any": "Any",
-    "sort": { "newest": "Newest", "price_asc": "Price: low to high", "price_desc": "Price: high to low", "area_desc": "Largest area", "views": "Most viewed" }
+    "sort": {
+      "newest": "Newest",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low",
+      "area_desc": "Largest area",
+      "views": "Most viewed"
+    }
   },
   "footer": {
     "about": "About Habitta",
@@ -158,6 +191,19 @@
     "haveAccount": "Already have an account?",
     "asAgent": "I want to list properties (agent account)",
     "invalid": "Invalid email or password",
-    "demo": "Demo accounts"
+    "demo": "Demo accounts",
+    "passwordMin": "At least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "confirmPassword": "Confirm password",
+    "networkError": "Could not connect. Check your connection and try again."
+  },
+  "errors": {
+    "notFoundTitle": "We couldn't find this page",
+    "notFoundText": "The link may be broken or the listing may no longer exist.",
+    "goHome": "Go home",
+    "browse": "Browse properties",
+    "errorTitle": "Something went wrong",
+    "errorText": "An unexpected error occurred while loading the page. You can try again.",
+    "retry": "Try again"
   }
 }

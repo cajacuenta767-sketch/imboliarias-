@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getPageBySlug } from "@/server/modules/pages/service";
 import { HttpError } from "@/server/errors";
@@ -6,14 +7,14 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-async function load(slug: string) {
+const load = cache(async (slug: string) => {
   try {
     return await getPageBySlug(slug);
   } catch (e) {
     if (e instanceof HttpError && e.status === 404) return null;
     throw e;
   }
-}
+});
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const p = await load((await params).slug);
   return { title: p?.metaTitle ?? p?.title ?? "Página", description: p?.metaDescription ?? undefined };

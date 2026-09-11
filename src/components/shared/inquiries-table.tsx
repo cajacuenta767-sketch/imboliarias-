@@ -36,7 +36,7 @@ export function InquiriesTable({ rows, meta }: { rows: Row[]; meta: { page: numb
         <IconButton title="Ver" onClick={() => open(r)}><Eye className="h-4 w-4" /></IconButton>
         <IconButton title="Responder por correo" href={`mailto:${r.email}?subject=Re: ${encodeURIComponent(r.property?.title ?? "tu consulta")}`}><Mail className="h-4 w-4" /></IconButton>
         {r.phone && <IconButton title="WhatsApp" href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}><Phone className="h-4 w-4" /></IconButton>}
-        <IconButton title="Eliminar" tone="danger" onClick={async () => { if (!confirm("¿Eliminar consulta?")) return; await apiDelete(`/api/v1/inquiries/${r.id}`); router.refresh(); }}><Trash2 className="h-4 w-4" /></IconButton>
+        <IconButton title="Eliminar" tone="danger" onClick={async () => { if (!confirm("¿Eliminar consulta?")) return; try { await apiDelete(`/api/v1/inquiries/${r.id}`); toast.success("Consulta eliminada"); router.refresh(); } catch (e) { toast.error((e as Error).message); } }}><Trash2 className="h-4 w-4" /></IconButton>
       </RowActions>
     ) },
   ];

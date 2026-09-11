@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
@@ -37,13 +38,14 @@ export function DataTable<T extends { id: string }>({
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <form onSubmit={(e) => { e.preventDefault(); setParam("q", q); }} className="relative w-full max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-            <input className="input pl-9" placeholder={searchPlaceholder} value={q} onChange={(e) => setQ(e.target.value)} />
+            <input type="search" className="input pl-9" placeholder={searchPlaceholder} aria-label={searchPlaceholder} value={q} onChange={(e) => setQ(e.target.value)} />
           </form>
           {filters}
           {bulkActions && selected.size > 0 && (
             <div className="relative">
               <select
                 className="input cursor-pointer appearance-none pr-8"
+                aria-label="Acciones en lote"
                 defaultValue=""
                 onChange={async (e) => {
                   const v = e.target.value;
@@ -73,7 +75,7 @@ export function DataTable<T extends { id: string }>({
               <tr>
                 {bulkActions && (
                   <th className="w-10 px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4 accent-brand" checked={allSelected} onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())} />
+                    <input type="checkbox" className="h-4 w-4 accent-brand" aria-label="Seleccionar todo" checked={allSelected} onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())} />
                   </th>
                 )}
                 {columns.map((c) => <th key={c.key} className={cn("px-4 py-3 font-bold", c.className, hide(c.hideBelow))}>{c.header}</th>)}
@@ -84,7 +86,7 @@ export function DataTable<T extends { id: string }>({
                 <tr key={r.id} className={cn("transition hover:bg-muted/40", selected.has(r.id) && "bg-brand-soft/40", rowClassName?.(r))}>
                   {bulkActions && (
                     <td className="px-4 py-3">
-                      <input type="checkbox" className="h-4 w-4 accent-brand" checked={selected.has(r.id)} onChange={(e) => { const n = new Set(selected); if (e.target.checked) n.add(r.id); else n.delete(r.id); setSelected(n); }} />
+                      <input type="checkbox" className="h-4 w-4 accent-brand" aria-label="Seleccionar fila" checked={selected.has(r.id)} onChange={(e) => { const n = new Set(selected); if (e.target.checked) n.add(r.id); else n.delete(r.id); setSelected(n); }} />
                     </td>
                   )}
                   {columns.map((c) => (
@@ -111,7 +113,11 @@ export function RowActions({ children }: { children: React.ReactNode }) {
 }
 
 export function IconButton({ title, onClick, href, tone = "neutral", children }: { title: string; onClick?: () => void; href?: string; tone?: "neutral" | "danger" | "brand"; children: React.ReactNode }) {
-  const cls = cn("inline-flex h-8 w-8 items-center justify-center rounded-lg transition", tone === "danger" ? "text-danger hover:bg-red-50" : tone === "brand" ? "text-brand hover:bg-brand-soft" : "text-ink-soft hover:bg-muted hover:text-ink");
-  if (href) return <a href={href} title={title} className={cls}>{children}</a>;
-  return <button type="button" title={title} onClick={onClick} className={cls}>{children}</button>;
+  const cls = cn("inline-flex h-8 w-8 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50", tone === "danger" ? "text-danger hover:bg-red-50" : tone === "brand" ? "text-brand hover:bg-brand-soft" : "text-ink-soft hover:bg-muted hover:text-ink");
+  if (href) {
+    // Rutas internas con navegación de cliente; externas (mailto, wa.me) en pestaña nueva.
+    const internal = href.startsWith("/");
+    return internal ? <Link href={href} title={title} aria-label={title} className={cls}>{children}</Link> : <a href={href} title={title} aria-label={title} className={cls} target="_blank" rel="noreferrer">{children}</a>;
+  }
+  return <button type="button" title={title} aria-label={title} onClick={onClick} className={cls}>{children}</button>;
 }

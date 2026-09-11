@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, Globe } from "lucide-react";
 import { useCurrency } from "@/lib/hooks/use-currency";
 import { setCookie } from "@/lib/api";
@@ -12,11 +12,13 @@ const cls = (dark?: boolean) =>
 
 export function LangSwitch({ dark }: { dark?: boolean }) {
   const locale = useLocale();
+  const t = useTranslations("common");
   const router = useRouter();
   return (
-    <label className={cls(dark)}>
-      <Globe className="h-3.5 w-3.5" />
+    <label className={cn(cls(dark), "focus-within:ring-2 focus-within:ring-brand/50")}>
+      <Globe className="h-3.5 w-3.5" aria-hidden />
       <select
+        aria-label={t("language")}
         value={locale}
         onChange={(e) => {
           setCookie("locale", e.target.value);
@@ -34,10 +36,13 @@ export function LangSwitch({ dark }: { dark?: boolean }) {
 
 export function CurrencySwitch({ dark }: { dark?: boolean }) {
   const { currencies, current, setCurrency } = useCurrency();
+  const t = useTranslations("common");
   const router = useRouter();
+  if (currencies.length <= 1) return null;
   return (
-    <label className={cls(dark)}>
+    <label className={cn(cls(dark), "focus-within:ring-2 focus-within:ring-brand/50")}>
       <select
+        aria-label={t("currency")}
         value={current.code}
         onChange={(e) => {
           setCurrency(e.target.value);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -19,7 +20,8 @@ import { HttpError } from "@/server/errors";
 
 export const dynamic = "force-dynamic";
 
-async function load(slug: string) {
+// `cache` deduplica la consulta entre generateMetadata y la página: una sola lectura y una sola vista contada.
+const load = cache(async (slug: string) => {
   try {
     const user = await currentUser();
     return await getPropertyBySlug(slug, { countView: true, user });
@@ -27,7 +29,7 @@ async function load(slug: string) {
     if (e instanceof HttpError && e.status === 404) return null;
     throw e;
   }
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const p = await load((await params).slug);
@@ -57,7 +59,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="container-x py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <nav className="mb-4 text-xs text-ink-muted">
         <Link href="/" className="hover:text-brand">Inicio</Link> / <Link href={`/propiedades?type=${p.type}`} className="hover:text-brand">{p.type === "SALE" ? "Venta" : "Alquiler"}</Link> / <span className="text-ink">{p.title}</span>
       </nav>

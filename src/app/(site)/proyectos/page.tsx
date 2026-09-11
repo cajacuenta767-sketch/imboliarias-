@@ -3,7 +3,8 @@ import { ProjectCard } from "@/components/site/cards";
 import { Pagination } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/ui/misc";
 import { listProjects, projectQuerySchema } from "@/server/modules/projects/service";
-import { listCities } from "@/server/modules/locations/service";
+import { cityOptions } from "@/server/modules/locations/service";
+import { parseSearchParams } from "@/server/lib/query";
 import { ProjectFilters } from "@/components/site/project-filters";
 
 export const dynamic = "force-dynamic";
@@ -11,9 +12,8 @@ export const metadata: Metadata = { title: "Proyectos" };
 
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const parsed = projectQuerySchema.safeParse({ ...sp, perPage: "9" });
-  const q = parsed.success ? parsed.data : projectQuerySchema.parse({});
-  const [{ items, meta }, cities] = await Promise.all([listProjects(q), listCities()]);
+  const q = parseSearchParams(projectQuerySchema, sp, { perPage: "9" });
+  const [{ items, meta }, cities] = await Promise.all([listProjects(q), cityOptions()]);
   return (
     <div className="container-x py-10">
       <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">

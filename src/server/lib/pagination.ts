@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+const blankToUndefined = (v: unknown) => (v === "" || v === null ? undefined : v);
+
 export const paginationSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  perPage: z.coerce.number().int().min(1).max(100).default(12),
+  page: z.preprocess(blankToUndefined, z.coerce.number().int().min(1).default(1)),
+  perPage: z.preprocess(blankToUndefined, z.coerce.number().int().min(1).max(100).default(12)),
 });
 
 export type Pagination = z.infer<typeof paginationSchema>;

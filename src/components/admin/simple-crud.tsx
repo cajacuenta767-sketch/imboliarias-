@@ -49,6 +49,13 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Normaliza la fila contra los campos definidos para que ningún input arranque como no controlado.
+  const openEdit = (r: T) => {
+    const base: Record<string, unknown> = { ...r };
+    fields.forEach((f) => { if (base[f.name] === undefined || base[f.name] === null) base[f.name] = f.type === "checkbox" ? false : ""; });
+    setEditing(base as Partial<T>);
+    setErrors({});
+  };
   const openNew = () => {
     const base: Record<string, unknown> = {};
     fields.forEach((f) => { base[f.name] = f.default ?? (f.type === "checkbox" ? false : ""); });
@@ -72,7 +79,7 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
       load();
     } catch (err) {
       if (err instanceof ApiError && err.details) setErrors(err.details);
-      toast.error((err as Error).message);
+      else toast.error((err as Error).message);
     } finally {
       setSaving(false);
     }
@@ -144,7 +151,7 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         {extraActions?.(r, load)}
-                        {canEdit && <button onClick={() => { setEditing(r); setErrors({}); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-muted hover:text-ink" title="Editar"><Pencil className="h-4 w-4" /></button>}
+                        {canEdit && <button onClick={() => { openEdit(r); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-muted hover:text-ink" title="Editar"><Pencil className="h-4 w-4" /></button>}
                         {canDelete && <button onClick={() => remove(r)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-red-50" title="Eliminar"><Trash2 className="h-4 w-4" /></button>}
                       </div>
                     </td>

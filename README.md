@@ -62,7 +62,12 @@ Las páginas de servidor llaman a los servicios directamente (sin salto HTTP); l
 
 - Publicar cuesta créditos (`credits_per_listing`), destacar cuesta extra (`credits_per_featured`). Los créditos se compran con paquetes; el administrador publica sin costo.
 - Las publicaciones de agentes entran en moderación (`moderation_required`) y expiran a los `listing_days` días; se pueden renovar.
-- Pagos: `PAYMENT_GATEWAY=SANDBOX` aprueba al instante; `MANUAL` deja la factura pendiente para que el administrador la marque pagada; el adaptador de Stripe queda preparado en `billing/service.ts`.
+- Pagos: la pasarela la decide **solo el servidor** con `PAYMENT_GATEWAY`. `SANDBOX` aprueba al instante (solo para pruebas); cualquier otro valor (o ninguno) se comporta como `MANUAL`: la factura queda pendiente hasta que el administrador la marque pagada. Una factura pagada solo puede pasar a `REFUNDED`, y al hacerlo se retiran los créditos otorgados.
+- Créditos: el cobro es atómico (dos publicaciones simultáneas no dejan el saldo en negativo). La vigencia (`listing_days`) empieza a contar cuando la publicación se aprueba, no cuando se crea.
+- Cupones: `PERCENT` no puede superar 100; los `FIXED` y la compra mínima aplican solo a paquetes en la moneda del cupón.
+- Contenido enriquecido (propiedades, proyectos, blog, páginas, empleos) se sanea en el servidor al guardarse; el correo de consultas escapa el HTML.
+- Subidas: el tipo real se detecta por los primeros bytes del archivo y la extensión la fija el servidor; cada usuario ve y borra solo sus archivos (el administrador, todos).
+- Límite de peticiones en memoria para inicio de sesión, registro, consultas, reseñas, postulaciones y validación de cupones (para varias réplicas conviene respaldarlo en Redis).
 - Correos: si no hay `SMTP_HOST` se imprimen en consola.
 
 ## PostgreSQL en producción
@@ -79,7 +84,8 @@ Las páginas de servidor llaman a los servicios directamente (sin salto HTTP); l
 | `npm run lint` / `typecheck` / `test` | ESLint, TypeScript y Vitest |
 | `npm run db:migrate` / `db:seed` / `db:reset` / `db:studio` | base de datos |
 | `node scripts/screenshot.mjs <url> <out.png>` | captura de pantalla con Chromium |
+| `node scripts/smoke.mjs` | prueba de humo end-to-end contra `http://localhost:3000` (login, subida, checkout, créditos, límites) |
 
 ## Despliegue
 
-Funciona en Vercel, Railway, Render, un VPS con `npm run build && npm start` o Docker. Configura `AUTH_SECRET`, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL` y, opcionalmente, SMTP y pasarela de pago. Las imágenes subidas se guardan en `public/uploads`; para S3/R2 implementa `StorageAdapter` en `src/server/lib/storage.ts`.
+Funciona en Vercel, Railway, Render, un VPS con `npm run build && npm start` o Docker. Configura `AUTH_SECRET`, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL` y, opcionalmente, SMTP y pasarela de pago. `NEXT_PUBLIC_DEMO_LOGIN=1` muestra los accesos de prueba en `/ingresar`; no lo actives en producción. El sitio expone `robots.txt`, `sitemap.xml` y `manifest.webmanifest`. Las imágenes subidas se guardan en `public/uploads`; para S3/R2 implementa `StorageAdapter` en `src/server/lib/storage.ts`.

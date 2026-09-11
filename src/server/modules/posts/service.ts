@@ -5,6 +5,8 @@ import { notFound } from "@/server/errors";
 import { paginationSchema, paginate, meta } from "@/server/lib/pagination";
 import { uniqueSlug } from "@/server/lib/slug";
 import { CONTENT_STATUSES } from "@/lib/constants";
+import { optionalDate } from "@/server/lib/query";
+import { cleanHtml, cleanText } from "@/server/lib/sanitize";
 
 export const postSchema = z.object({
   title: z.string().min(3),
@@ -15,7 +17,7 @@ export const postSchema = z.object({
   isFeatured: z.coerce.boolean().default(false),
   categoryId: z.string().optional().nullable(),
   tags: z.string().optional().nullable(),
-  publishedAt: z.coerce.date().optional().nullable(),
+  publishedAt: optionalDate(),
 });
 export const postQuerySchema = paginationSchema.extend({ q: z.string().optional(), category: z.string().optional(), scope: z.enum(["public", "admin"]).default("public") });
 export const postCategorySchema = z.object({ name: z.string().min(2) });
@@ -50,14 +52,20 @@ export async function getPostById(id: string) {
 }
 export async function createPost(input: z.infer<typeof postSchema>, authorId: string) {
   const slug = await uniqueSlug(input.title, async (s) => !!(await db.post.findUnique({ where: { slug: s } })));
-  return db.post.create({ data: { ...input, slug, authorId, publishedAt: input.publishedAt ?? new Date(), categoryId: input.categoryId || null } });
+  const publishedAt = input.status === "PUBLISHED" ? (input.publishedAt ?? new Date()) : (input.publishedAt ?? null);
+  return db.post.create({ data: { ...input, excerpt: cleanText(input.excerpt), content: cleanHtml(input.content), slug, authorId, publishedAt, categoryId: input.categoryId || null } });
 }
 export async function updatePost(id: string, input: z.infer<typeof postSchema>) {
-  return db.post.update({ where: { id }, data: { ...input, categoryId: input.categoryId || null } });
+  const existing = await db.post.findUnique({ where: { id }, select: { publishedAt: true, status: true } });
+  if (!existing) throw notFound();
+  // Al publicar por primera vez se fija la fecha; si ya la tenía se conserva salvo que se indique otra.
+  const publishedAt = input.publishedAt ?? existing.publishedAt ?? (input.status === "PUBLISHED" ? new Date() : null);
+  return db.post.update({ where: { id }, data: { ...input, excerpt: cleanText(input.excerpt), content: cleanHtml(input.content), publishedAt, categoryId: input.categoryId || null } });
 }
 export const deletePost = (id: string) => db.post.delete({ where: { id } });
 
-export const listPostCategories = () => db.postCategory.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { posts: true } } } });
+export const listPostCategories = (onlyPublished = false) =>
+  db.postCategory.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { posts: onlyPublished ? { where: { status: "PUBLISHED" } } : true } } } });
 export async function createPostCategory(input: z.infer<typeof postCategorySchema>) {
   const slug = await uniqueSlug(input.name, async (s) => !!(await db.postCategory.findUnique({ where: { slug: s } })));
   return db.postCategory.create({ data: { ...input, slug } });

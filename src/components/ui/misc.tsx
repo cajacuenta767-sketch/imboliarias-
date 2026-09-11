@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Children, cloneElement, isValidElement, useId } from "react";
 import { ArrowRight, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ export function EmptyState({ title, text, action, icon: Icon = Inbox, className 
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-xl bg-muted", className)} />;
+  return <div className={cn("animate-pulse rounded-xl bg-muted", className)} aria-hidden />;
 }
 
 export function PageHeader({ title, subtitle, children, className }: { title: string; subtitle?: string; children?: React.ReactNode; className?: string }) {
@@ -49,21 +50,46 @@ export function PageHeader({ title, subtitle, children, className }: { title: st
   );
 }
 
-export function Field({ label, error, hint, children, className, required }: { label?: string; error?: string; hint?: string; children: React.ReactNode; className?: string; required?: boolean }) {
+const CONTROL_TAGS = new Set(["input", "select", "textarea"]);
+
+/**
+ * Campo de formulario: asocia la etiqueta al control (htmlFor/id), y enlaza el mensaje de error
+ * o la ayuda mediante aria-describedby. Si el hijo directo es un input/select/textarea recibe el id;
+ * en otro caso la etiqueta actúa como agrupador.
+ */
+export function Field({ label, error, hint, children, className, required, id: givenId }: { label?: string; error?: string; hint?: string; children: React.ReactNode; className?: string; required?: boolean; id?: string }) {
+  const autoId = useId();
+  const id = givenId ?? `f${autoId}`;
+  const descId = `${id}-desc`;
+  const hasDesc = !!(error || hint);
+  let control = children;
+  let labelFor: string | undefined;
+  const only = Children.count(children) === 1 ? Children.only(children) : null;
+  if (only && isValidElement(only) && typeof only.type === "string" && CONTROL_TAGS.has(only.type)) {
+    const el = only as React.ReactElement<Record<string, unknown>>;
+    const props = el.props;
+    labelFor = (props.id as string | undefined) ?? id;
+    control = cloneElement(el, {
+      id: labelFor,
+      "aria-invalid": error ? true : props["aria-invalid"],
+      "aria-describedby": hasDesc ? [props["aria-describedby"], descId].filter(Boolean).join(" ") : props["aria-describedby"],
+      "aria-required": required ? true : props["aria-required"],
+    });
+  }
   return (
     <div className={className}>
       {label && (
-        <label className="label">
-          {label} {required && <span className="text-danger">*</span>}
+        <label className="label" htmlFor={labelFor}>
+          {label} {required && <span className="text-danger" aria-hidden>*</span>}
         </label>
       )}
-      {children}
-      {hint && !error && <p className="mt-1 text-xs text-ink-muted">{hint}</p>}
-      {error && <p className="mt-1 text-xs font-medium text-danger">{error}</p>}
+      {control}
+      {hint && !error && <p id={descId} className="mt-1 text-xs text-ink-muted">{hint}</p>}
+      {error && <p id={descId} role="alert" className="mt-1 text-xs font-medium text-danger">{error}</p>}
     </div>
   );
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <span className={cn("inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent", className)} />;
+  return <span className={cn("inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent", className)} role="status" aria-label="Cargando" />;
 }

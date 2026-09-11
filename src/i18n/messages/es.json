@@ -17,7 +17,11 @@
     "logout": "Cerrar sesión"
   },
   "hero": {
-    "tabs": { "sale": "Comprar", "rent": "Alquilar", "projects": "Proyectos" },
+    "tabs": {
+      "sale": "Comprar",
+      "rent": "Alquilar",
+      "projects": "Proyectos"
+    },
     "keyword": "¿Qué buscas? Barrio, ciudad, código…",
     "city": "Ciudad",
     "anyCity": "Todas las ciudades",
@@ -59,7 +63,15 @@
     "filters": "Filtros",
     "apply": "Aplicar",
     "language": "Idioma",
-    "currency": "Moneda"
+    "currency": "Moneda",
+    "sortLabel": "Ordenar resultados",
+    "viewGrid": "Vista en cuadrícula",
+    "viewList": "Vista en lista",
+    "viewMap": "Vista en mapa",
+    "skipToContent": "Saltar al contenido",
+    "menu": "Menú",
+    "close": "Cerrar",
+    "mapError": "No pudimos cargar el mapa."
   },
   "home": {
     "featuredProjects": "Proyectos destacados",
@@ -79,7 +91,12 @@
     "ctaTitle": "¿Tienes una propiedad para vender o alquilar?",
     "ctaText": "Publícala en minutos y llega a miles de personas que están buscando exactamente lo que ofreces.",
     "ctaButton": "Publicar ahora",
-    "stats": { "properties": "Propiedades activas", "cities": "Ciudades", "agents": "Asesores", "clients": "Clientes felices" }
+    "stats": {
+      "properties": "Propiedades activas",
+      "cities": "Ciudades",
+      "agents": "Asesores",
+      "clients": "Clientes felices"
+    }
   },
   "property": {
     "overview": "Descripción",
@@ -116,7 +133,17 @@
     "yourComment": "Tu comentario",
     "reviewSent": "¡Gracias! Tu reseña se publicará tras revisión.",
     "inquirySent": "Mensaje enviado. El asesor te contactará pronto.",
-    "requestVisit": "Solicitar visita"
+    "requestVisit": "Solicitar visita",
+    "savedToast": "Guardada en favoritos",
+    "removedToast": "Quitada de favoritos",
+    "loginToSave": "Inicia sesión para guardar favoritos",
+    "removeFromSaved": "Quitar de favoritos",
+    "addToSaved": "Guardar en favoritos",
+    "featuredBadge": "Destacada",
+    "noFeatures": "Sin características registradas.",
+    "noNearby": "Sin lugares cercanos registrados.",
+    "noLocation": "Ubicación no disponible",
+    "linkCopied": "Enlace copiado"
   },
   "list": {
     "titleAll": "Propiedades",
@@ -130,7 +157,13 @@
     "bedrooms": "Habitaciones",
     "bathrooms": "Baños",
     "any": "Cualquiera",
-    "sort": { "newest": "Más recientes", "price_asc": "Precio: menor a mayor", "price_desc": "Precio: mayor a menor", "area_desc": "Mayor área", "views": "Más vistas" }
+    "sort": {
+      "newest": "Más recientes",
+      "price_asc": "Precio: menor a mayor",
+      "price_desc": "Precio: mayor a menor",
+      "area_desc": "Mayor área",
+      "views": "Más vistas"
+    }
   },
   "footer": {
     "about": "Sobre Habitta",
@@ -158,6 +191,19 @@
     "haveAccount": "¿Ya tienes cuenta?",
     "asAgent": "Quiero publicar propiedades (cuenta de agente)",
     "invalid": "Correo o contraseña incorrectos",
-    "demo": "Cuentas de prueba"
+    "demo": "Cuentas de prueba",
+    "passwordMin": "Mínimo 8 caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "confirmPassword": "Confirmar contraseña",
+    "networkError": "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "errors": {
+    "notFoundTitle": "No encontramos esta página",
+    "notFoundText": "Puede que el enlace esté roto o que la publicación ya no exista.",
+    "goHome": "Ir al inicio",
+    "browse": "Ver propiedades",
+    "errorTitle": "Algo salió mal",
+    "errorText": "Ocurrió un error inesperado al cargar la página. Puedes intentarlo de nuevo.",
+    "retry": "Reintentar"
   }
 }

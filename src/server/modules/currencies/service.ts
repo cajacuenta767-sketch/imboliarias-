@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { z } from "zod";
 import { db } from "@/server/db";
 import { FALLBACK_CURRENCY, type CurrencyInfo } from "@/lib/currency";
@@ -14,11 +15,11 @@ export const currencySchema = z.object({
   order: z.coerce.number().int().default(0),
 });
 
-export async function listCurrencies(onlyActive = true): Promise<CurrencyInfo[]> {
+export const listCurrencies = cache(async (onlyActive = true): Promise<CurrencyInfo[]> => {
   const rows = await db.currency.findMany({ where: onlyActive ? { isActive: true } : {}, orderBy: { order: "asc" } });
   if (rows.length === 0) return [FALLBACK_CURRENCY];
   return rows;
-}
+});
 
 export async function getDefaultCurrency(): Promise<CurrencyInfo> {
   return (await db.currency.findFirst({ where: { isDefault: true } })) ?? FALLBACK_CURRENCY;

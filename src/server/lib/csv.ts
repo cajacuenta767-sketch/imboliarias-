@@ -2,8 +2,10 @@ export function toCsv(rows: Record<string, unknown>[], columns?: string[]): stri
   if (rows.length === 0) return "";
   const cols = columns ?? Object.keys(rows[0]);
   const esc = (v: unknown) => {
-    const s = v === null || v === undefined ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = v === null || v === undefined ? "" : String(v);
+    // Evita que hojas de cálculo interpreten el valor como fórmula (=, +, -, @).
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r']/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
 }

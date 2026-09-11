@@ -10,12 +10,19 @@ import { apiPost, apiPut, ApiError } from "@/lib/api";
 import { Field, Spinner } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
 import { Tabs } from "@/components/ui/tabs";
-import { RichEditor } from "@/components/shared/rich-editor";
 import { ImageUploader, type ImageItem } from "@/components/shared/image-uploader";
 import { STATUS_LABELS, PROPERTY_STATUSES, MODERATION_STATUSES, RENT_PERIODS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const MapPicker = dynamic(() => import("@/components/shared/map-picker").then((m) => m.MapPicker), { ssr: false, loading: () => <div className="h-[320px] animate-pulse rounded-2xl bg-muted" /> });
+const RichEditor = dynamic(() => import("@/components/shared/rich-editor").then((m) => m.RichEditor), { ssr: false, loading: () => <div className="input min-h-[220px] animate-pulse" /> });
+
+/** Pestaña donde vive cada campo, para llevar al usuario al error en vez de a "Básico" siempre. */
+const FIELD_TAB: Record<string, "basic" | "details" | "media" | "location" | "extra" | "i18n"> = {
+  title: "basic", description: "basic", content: "basic", type: "basic", categoryId: "basic", price: "basic", currencyCode: "basic", period: "basic",
+  area: "details", bedrooms: "details", bathrooms: "details", floors: "details", parking: "details", yearBuilt: "details", videoUrl: "details", projectId: "details", customValues: "details",
+  images: "media", cityId: "location", address: "location", lat: "location", lng: "location", featureIds: "extra", facilities: "extra", translations: "i18n",
+};
 
 type Opt = { id: string; name: string };
 export type PropertyFormOptions = {
@@ -38,7 +45,9 @@ export function PropertyForm({ initial, id, options, mode, credits, costs, backH
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const set = <K extends keyof PropertyFormValues>(k: K, val: PropertyFormValues[K]) => setV((s) => ({ ...s, [k]: val }));
   const num = (s: string) => (s === "" ? "" : Number(s));
-  const cost = useMemo(() => (mode === "account" && !id ? (costs?.listing ?? 1) + (v.isFeatured ? costs?.featured ?? 2 : 0) : 0), [mode, id, v.isFeatured, costs]);
+  // Coste: al crear se cobra la publicación (+ destacar); al editar solo se cobra si se activa "destacar" por primera vez.
+  const featuredCharge = v.isFeatured && !initial.isFeatured ? (costs?.featured ?? 2) : 0;
+  const cost = useMemo(() => (mode !== "account" ? 0 : !id ? (costs?.listing ?? 1) + featuredCharge : featuredCharge), [mode, id, costs, featuredCharge]);
   const cityRef = useMemo(() => options.cities.find((c) => c.id === v.cityId), [options.cities, v.cityId]);
 
   useEffect(() => {
@@ -64,8 +73,12 @@ export function PropertyForm({ initial, id, options, mode, credits, costs, backH
       if (action === "exit" || !id) router.push(backHref);
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError && err.details) { setErrors(err.details); setTab("basic"); }
-      toast.error((err as Error).message);
+      if (err instanceof ApiError && err.details) {
+        setErrors(err.details);
+        const first = Object.keys(err.details)[0];
+        setTab(FIELD_TAB[first] ?? "basic");
+        toast.error(`${(err as Error).message}: ${Object.values(err.details)[0]?.[0] ?? ""}`);
+      } else toast.error((err as Error).message);
     } finally {
       setSaving(false);
     }
@@ -215,14 +228,14 @@ export function PropertyForm({ initial, id, options, mode, credits, costs, backH
           {mode === "account" && (
             <div className="mt-4 rounded-xl bg-muted p-3 text-xs text-ink-soft">
               <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1"><Coins className="h-3.5 w-3.5 text-accent" /> Tus créditos</span><b className="text-ink">{credits ?? 0}</b></p>
-              {!id && <p className="mt-1 flex items-center justify-between"><span>Costo de esta publicación</span><b className={cn(cost > (credits ?? 0) ? "text-danger" : "text-ink")}>{cost}</b></p>}
-              {!id && cost > (credits ?? 0) && <Link href="/cuenta/creditos" className="mt-2 block font-semibold text-brand hover:underline">Comprar créditos →</Link>}
+              {cost > 0 && <p className="mt-1 flex items-center justify-between"><span>{id ? "Costo de destacar" : "Costo de esta publicación"}</span><b className={cn(cost > (credits ?? 0) ? "text-danger" : "text-ink")}>{cost}</b></p>}
+              {cost > (credits ?? 0) && <Link href="/cuenta/creditos" className="mt-2 block font-semibold text-brand hover:underline">Comprar créditos →</Link>}
             </div>
           )}
         </div>
         <div className="card space-y-4 p-5">
           <Switch checked={v.isFeatured} onChange={(b) => set("isFeatured", b)} label="Destacar propiedad" />
-          {mode === "account" && !id && v.isFeatured && <p className="-mt-2 flex items-center gap-1 text-xs text-ink-muted"><Sparkles className="h-3 w-3 text-accent" /> +{costs?.featured ?? 2} créditos</p>}
+          {mode === "account" && featuredCharge > 0 && <p className="-mt-2 flex items-center gap-1 text-xs text-ink-muted"><Sparkles className="h-3 w-3 text-accent" /> +{featuredCharge} créditos</p>}
           <Field label="Estado"><select className="input cursor-pointer" value={v.status} onChange={(e) => set("status", e.target.value)}>{PROPERTY_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}</select></Field>
           {mode === "admin" && (
             <>
