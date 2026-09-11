@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Search } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, ApiError } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Field, Spinner, EmptyState } from "@/components/ui/misc";
@@ -18,9 +20,20 @@ export type ColDef<T> = { key: string; header: string; render?: (row: T) => Reac
 
 type Row = { id: string } & Record<string, unknown>;
 
-export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "id", fields, columns, canCreate = true, canEdit = true, canDelete = true, listQuery = "", createMethod = "POST", updateMethod = "PUT", extraActions }: {
+type Meta = { page: number; perPage: number; total: number; totalPages: number };
+
+export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "id", fields, columns, canCreate = true, canEdit = true, canDelete = true, listQuery = "", createMethod = "POST", updateMethod = "PUT", extraActions, paginated, searchPlaceholder }: {
   title: string; subtitle?: string; endpoint: string; idKey?: string; fields: FieldDef[]; columns: ColDef<T>[]; canCreate?: boolean; canEdit?: boolean; canDelete?: boolean; listQuery?: string; createMethod?: "POST" | "PUT"; updateMethod?: "PUT" | "PATCH"; extraActions?: (row: T, reload: () => void) => React.ReactNode;
+  /** Para colecciones grandes cuya API pagina (usuarios): página y búsqueda viven en la URL. */
+  paginated?: boolean; searchPlaceholder?: string;
 }) {
+  const sp = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const page = paginated ? Math.max(1, Number(sp.get("page") ?? 1) || 1) : 1;
+  const qParam = paginated ? (sp.get("q") ?? "") : "";
+  const [q, setQ] = useState(qParam);
+  const [meta, setMeta] = useState<Meta | null>(null);
   const [rows, setRows] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<T> | null>(null);
@@ -31,14 +44,17 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await apiGet<T[]>(`${endpoint}${listQuery}`);
+      const extra = paginated ? `${listQuery ? "&" : "?"}perPage=30&page=${page}${qParam ? `&q=${encodeURIComponent(qParam)}` : ""}` : "";
+      const r = await apiGet<T[]>(`${endpoint}${listQuery}${extra}`);
       setRows(r.data ?? []);
+      setMeta(r.meta ?? null);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [endpoint, listQuery]);
+  }, [endpoint, listQuery, paginated, page, qParam]);
+  const setParam = (k: string, v: string) => { const n = new URLSearchParams(sp.toString()); if (v) n.set(k, v); else n.delete(k); if (k !== "page") n.delete("page"); router.push(`${pathname}?${n.toString()}`); };
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -128,8 +144,14 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
           <h1 className="font-display text-2xl font-extrabold tracking-tight">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-ink-soft">{subtitle}</p>}
         </div>
-        <div className="flex gap-2">
-          <button onClick={load} className="btn-outline" title="Recargar"><RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} /></button>
+        <div className="flex flex-wrap gap-2">
+          {paginated && (
+            <form onSubmit={(e) => { e.preventDefault(); setParam("q", q.trim()); }} className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden />
+              <input type="search" className="input w-56 pl-9" placeholder={searchPlaceholder ?? "Buscar…"} aria-label={searchPlaceholder ?? "Buscar"} value={q} onChange={(e) => setQ(e.target.value)} />
+            </form>
+          )}
+          <button onClick={load} className="btn-outline" title="Recargar" aria-label="Recargar"><RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} /></button>
           {canCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" /> Crear</button>}
         </div>
       </div>
@@ -151,14 +173,20 @@ export function SimpleCrud<T extends Row>({ title, subtitle, endpoint, idKey = "
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         {extraActions?.(r, load)}
-                        {canEdit && <button onClick={() => { openEdit(r); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-muted hover:text-ink" title="Editar"><Pencil className="h-4 w-4" /></button>}
-                        {canDelete && <button onClick={() => remove(r)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-red-50" title="Eliminar"><Trash2 className="h-4 w-4" /></button>}
+                        {canEdit && <button onClick={() => { openEdit(r); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-muted hover:text-ink" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
+                        {canDelete && <button onClick={() => remove(r)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-red-50" title="Eliminar" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>}
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-line px-4 py-3 text-xs text-ink-muted">
+            <span>{meta.total} registros</span>
+            <Pagination page={meta.page} totalPages={meta.totalPages} />
           </div>
         )}
       </div>

@@ -88,7 +88,7 @@ export default async function HomePage() {
 
       {/* DESTACADAS */}
       <section className="container-x mt-20">
-        <SectionHeader eyebrow="Selección Habitta" title={t("featuredProperties")} subtitle={t("featuredPropertiesSub")} href="/propiedades?featured=true" />
+        <SectionHeader eyebrow={`${t("eyebrowFeatured")} ${s.site_name}`} title={t("featuredProperties")} subtitle={t("featuredPropertiesSub")} href="/propiedades?featured=true" />
         <PropertyGrid items={featured} />
       </section>
 
@@ -96,7 +96,7 @@ export default async function HomePage() {
       {projects.length > 0 && (
         <section className="mt-24 bg-elevated py-20">
           <div className="container-x">
-            <SectionHeader eyebrow="Obra nueva" title={t("featuredProjects")} subtitle={t("featuredProjectsSub")} href="/proyectos" />
+            <SectionHeader eyebrow={t("eyebrowProjects")} title={t("featuredProjects")} subtitle={t("featuredProjectsSub")} href="/proyectos" />
             <div className="grid gap-5 lg:grid-cols-3">
               <ProjectCard p={projects[0]} large className="lg:col-span-2" />
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
@@ -111,7 +111,7 @@ export default async function HomePage() {
 
       {/* CIUDADES */}
       <section className="container-x mt-24">
-        <SectionHeader eyebrow="Ubicaciones" title={t("cities")} subtitle={t("citiesSub")} />
+        <SectionHeader eyebrow={t("eyebrowCities")} title={t("cities")} subtitle={t("citiesSub")} />
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {fCities.map((c, i) => (
             <CityCard key={c.id} c={c} className={i === 0 ? "col-span-2 row-span-2 aspect-auto" : ""} />
@@ -135,9 +135,9 @@ export default async function HomePage() {
       <section className="container-x mt-24">
         <div className="grid gap-5 md:grid-cols-3">
           {[
-            { icon: ShieldCheck, title: "Propiedades verificadas", text: "Cada publicación pasa por moderación para que no pierdas tiempo con anuncios falsos." },
-            { icon: MapPinned, title: "Búsqueda por mapa", text: "Explora por zonas, filtra por precio, área y características, y guarda tus favoritas." },
-            { icon: Sparkles, title: "Asesores de verdad", text: "Personas que conocen el barrio y te acompañan de la visita a la firma." },
+            { icon: ShieldCheck, title: t("why1Title"), text: t("why1Text") },
+            { icon: MapPinned, title: t("why2Title"), text: t("why2Text") },
+            { icon: Sparkles, title: t("why3Title"), text: t("why3Text") },
           ].map((f) => (
             <div key={f.title} className="card p-7">
               <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand"><f.icon className="h-6 w-6" /></span>
@@ -150,7 +150,7 @@ export default async function HomePage() {
 
       {/* AGENTES */}
       <section className="container-x mt-24">
-        <SectionHeader eyebrow="Equipo" title={t("agents")} subtitle={t("agentsSub")} href="/agentes" />
+        <SectionHeader eyebrow={t("eyebrowTeam")} title={t("agents")} subtitle={t("agentsSub")} href="/agentes" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {agents.map((a) => (
             <AgentCard key={a.id} a={a} />
@@ -182,7 +182,7 @@ export default async function HomePage() {
 
       {/* BLOG */}
       <section className="container-x mt-24">
-        <SectionHeader eyebrow="Blog" title={t("news")} subtitle={t("newsSub")} href="/noticias" />
+        <SectionHeader eyebrow={t("eyebrowBlog")} title={t("news")} subtitle={t("newsSub")} href="/noticias" />
         <div className="grid gap-5 md:grid-cols-3">
           {posts.map((p) => (
             <PostCard key={p.id} p={p} />

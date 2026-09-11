@@ -245,7 +245,10 @@ export async function updateProperty(id: string, rawInput: PropertyInput, user: 
     input = restrictForNonAdmin(rawInput, existing.agentId);
     const settings = await getSettings();
     const imagesChanged = existing.images.map((i) => i.url).join("|") !== input.images.map((i) => i.url).join("|");
-    const contentChanged = CONTENT_FIELDS.some((f) => (existing[f] ?? null) !== (input[f] ?? null)) || imagesChanged;
+    // Se comparan ambos lados ya normalizados (saneados/recortados) para que guardar sin cambios no reenvíe a moderación.
+    const norm = (f: (typeof CONTENT_FIELDS)[number], v: string | number | null | undefined) =>
+      v == null ? null : f === "content" ? cleanHtml(String(v)) : f === "price" ? Number(v) : cleanText(String(v));
+    const contentChanged = CONTENT_FIELDS.some((f) => norm(f, existing[f]) !== norm(f, input[f])) || imagesChanged;
     // Si cambia contenido relevante, vuelve a moderación cuando está configurado.
     if (settings.moderation_required === "true" && existing.moderation === "APPROVED" && contentChanged) moderationOverride = "PENDING";
     if (existing.moderation === "REJECTED") moderationOverride = "PENDING";

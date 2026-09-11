@@ -79,3 +79,11 @@ describe("computeTotals con decimales de moneda", () => {
     expect(computeTotals(100, { type: "PERCENT", value: 15 }, 19, 2).total).toBe(101.15);
   });
 });
+
+describe("sanitize es idempotente", () => {
+  it("volver a sanear no cambia el resultado (evita re-moderación espuria)", () => {
+    const html = '<p>Hola<br>mundo</p><ul><li><p>a</p></li></ul><a href="https://x.test" target="_blank" rel="noopener noreferrer nofollow">x</a>';
+    const once = cleanHtml(html)!;
+    expect(cleanHtml(once)).toBe(once);
+  });
+});

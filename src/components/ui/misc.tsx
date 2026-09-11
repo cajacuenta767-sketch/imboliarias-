@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Children, cloneElement, isValidElement, useId } from "react";
 import { ArrowRight, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ViewAllLabel } from "@/components/ui/view-all-label";
 
 export function SectionHeader({ eyebrow, title, subtitle, href, hrefLabel, className, align = "left" }: { eyebrow?: string; title: string; subtitle?: string; href?: string; hrefLabel?: string; className?: string; align?: "left" | "center" }) {
   return (
@@ -13,7 +14,7 @@ export function SectionHeader({ eyebrow, title, subtitle, href, hrefLabel, class
       </div>
       {href && (
         <Link href={href} className="group inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-strong">
-          {hrefLabel ?? "Ver todo"}
+          {hrefLabel ?? <ViewAllLabel />}
           <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
         </Link>
       )}

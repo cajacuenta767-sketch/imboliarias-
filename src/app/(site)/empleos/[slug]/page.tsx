@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { MapPin, Briefcase, Clock, Banknote } from "lucide-react";
 import { getCareerBySlug } from "@/server/modules/careers/service";
 import { HttpError } from "@/server/errors";
-import { STATUS_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { ApplyForm } from "@/components/site/apply-form";
 
@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function CareerPage({ params }: { params: Promise<{ slug: string }> }) {
   const c = await load((await params).slug);
   if (!c) notFound();
+  const ts = await getTranslations("status");
   return (
     <div className="container-x grid gap-10 py-10 lg:grid-cols-[1fr_380px]">
       <div>
@@ -33,7 +34,7 @@ export default async function CareerPage({ params }: { params: Promise<{ slug: s
         <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{c.title}</h1>
         <div className="mt-4 flex flex-wrap gap-3 text-sm text-ink-soft">
           {c.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4 text-brand" /> {c.location}</span>}
-          <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4 text-brand" /> {STATUS_LABELS[c.type]}</span>
+          <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4 text-brand" /> {ts(c.type)}</span>
           {c.salary && <span className="inline-flex items-center gap-1"><Banknote className="h-4 w-4 text-brand" /> {c.salary}</span>}
           {c.deadline && <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-brand" /> Cierra {formatDate(c.deadline)}</span>}
         </div>

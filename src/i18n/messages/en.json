@@ -96,7 +96,18 @@
       "cities": "Cities",
       "agents": "Advisors",
       "clients": "Happy clients"
-    }
+    },
+    "eyebrowFeatured": "Handpicked",
+    "eyebrowProjects": "New developments",
+    "eyebrowCities": "Locations",
+    "eyebrowTeam": "Team",
+    "eyebrowBlog": "Blog",
+    "why1Title": "Verified listings",
+    "why1Text": "Every listing goes through moderation so you never waste time on fake ads.",
+    "why2Title": "Map search",
+    "why2Text": "Explore by area, filter by price, size and features, and save your favorites.",
+    "why3Title": "Real agents",
+    "why3Text": "People who know the neighborhood and stay with you from the visit to the signing."
   },
   "property": {
     "overview": "Overview",
@@ -143,7 +154,12 @@
     "noFeatures": "No features listed.",
     "noNearby": "No nearby places listed.",
     "noLocation": "Location not available",
-    "linkCopied": "Link copied"
+    "linkCopied": "Link copied",
+    "home": "Home",
+    "priceLabel": "Price",
+    "agentFallback": "Agent",
+    "viewProfile": "View profile",
+    "partOfProject": "Part of the project"
   },
   "list": {
     "titleAll": "Properties",
@@ -205,5 +221,43 @@
     "errorTitle": "Something went wrong",
     "errorText": "An unexpected error occurred while loading the page. You can try again.",
     "retry": "Try again"
+  },
+  "status": {
+    "SALE": "For sale",
+    "RENT": "For rent",
+    "AVAILABLE": "Available",
+    "RESERVED": "Reserved",
+    "SOLD": "Sold",
+    "RENTED": "Rented",
+    "HIDDEN": "Hidden",
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "SELLING": "Selling",
+    "BUILDING": "Under construction",
+    "FINISHED": "Completed",
+    "COMING_SOON": "Coming soon",
+    "NEW": "New",
+    "READ": "Read",
+    "REPLIED": "Replied",
+    "CLOSED": "Closed",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled",
+    "REFUNDED": "Refunded",
+    "DRAFT": "Draft",
+    "PUBLISHED": "Published",
+    "OPEN": "Open",
+    "FULL_TIME": "Full time",
+    "PART_TIME": "Part time",
+    "CONTRACT": "Contract",
+    "REMOTE": "Remote",
+    "ADMIN": "Administrator",
+    "AGENT": "Agent",
+    "CUSTOMER": "Customer",
+    "MONTH": "month",
+    "YEAR": "year",
+    "DAY": "day",
+    "COMPLETED": "Completed",
+    "FAILED": "Failed"
   }
 }

@@ -1,5 +1,14 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { STATUS_LABELS } from "@/lib/constants";
+
+/** Etiqueta traducida de un estado/tipo; si falta la clave cae al diccionario en español. */
+export function useStatusLabel() {
+  const t = useTranslations("status");
+  return (value: string) => (t.has(value) ? t(value) : (STATUS_LABELS[value] ?? value));
+}
 
 const tones: Record<string, string> = {
   SALE: "bg-brand-soft text-brand-strong",
@@ -34,7 +43,8 @@ const tones: Record<string, string> = {
 };
 
 export function StatusBadge({ value, className, label }: { value: string; className?: string; label?: string }) {
-  return <span className={cn("chip", tones[value] ?? "bg-slate-100 text-slate-600", className)}>{label ?? STATUS_LABELS[value] ?? value}</span>;
+  const statusLabel = useStatusLabel();
+  return <span className={cn("chip", tones[value] ?? "bg-slate-100 text-slate-600", className)}>{label ?? statusLabel(value)}</span>;
 }
 
 export function Badge({ children, tone = "neutral", className }: { children: React.ReactNode; tone?: "neutral" | "brand" | "accent" | "dark" | "danger" | "success"; className?: string }) {

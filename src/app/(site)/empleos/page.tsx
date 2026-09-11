@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Briefcase, MapPin, Clock, ArrowRight } from "lucide-react";
 import { listCareers } from "@/server/modules/careers/service";
 import { EmptyState } from "@/components/ui/misc";
-import { STATUS_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Empleos" };
 
 export default async function CareersPage() {
-  const careers = await listCareers(true);
+  const [careers, ts] = await Promise.all([listCareers(true), getTranslations("status")]);
   return (
     <div className="container-x py-10">
       <div className="mb-8 max-w-2xl">
@@ -29,7 +29,7 @@ export default async function CareersPage() {
                 <p className="mt-1 text-sm text-ink-soft">{c.description}</p>
                 <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-muted">
                   {c.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.location}</span>}
-                  <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {STATUS_LABELS[c.type]}</span>
+                  <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {ts(c.type)}</span>
                   {c.deadline && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Cierra {formatDate(c.deadline)}</span>}
                 </div>
               </div>

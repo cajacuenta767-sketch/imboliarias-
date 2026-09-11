@@ -42,7 +42,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const p = await load(slug);
   if (!p) notFound();
-  const [t, rating, similar] = await Promise.all([getTranslations("property"), ratingSummary(p.id), similarProperties(p)]);
+  const [t, tc, rating, similar] = await Promise.all([getTranslations("property"), getTranslations("common"), ratingSummary(p.id), similarProperties(p)]);
   const agentUser = p.agent?.user ?? p.author;
   const whatsapp = p.agent?.whatsapp ?? agentUser.phone;
   const jsonLd = {
@@ -60,8 +60,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
   return (
     <div className="container-x py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <nav className="mb-4 text-xs text-ink-muted">
-        <Link href="/" className="hover:text-brand">Inicio</Link> / <Link href={`/propiedades?type=${p.type}`} className="hover:text-brand">{p.type === "SALE" ? "Venta" : "Alquiler"}</Link> / <span className="text-ink">{p.title}</span>
+      <nav className="mb-4 text-xs text-ink-muted" aria-label="Breadcrumb">
+        <Link href="/" className="hover:text-brand">{t("home")}</Link> / <Link href={`/propiedades?type=${p.type}`} className="hover:text-brand">{p.type === "SALE" ? tc("sale") : tc("rent")}</Link> / <span className="text-ink">{p.title}</span>
       </nav>
       <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
         <div className="min-w-0">
@@ -87,7 +87,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="card p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Precio</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{t("priceLabel")}</p>
             <Price amount={p.price} currencyCode={p.currencyCode} period={p.period} type={p.type} className="text-3xl text-brand-strong" />
             {p.area ? (
               <p className="mt-1 text-xs text-ink-muted">
@@ -98,8 +98,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
               <Avatar src={agentUser.avatarUrl} name={agentUser.name} size="lg" />
               <div className="min-w-0">
                 <p className="flex items-center gap-1 truncate font-display font-bold">{agentUser.name} <BadgeCheck className="h-4 w-4 text-brand" /></p>
-                <p className="truncate text-xs text-ink-muted">{p.agent?.title ?? "Asesor"}{p.agent?.agency ? ` · ${p.agent.agency}` : ""}</p>
-                {p.agent && <Link href={`/agentes/${p.agent.slug}`} className="text-xs font-semibold text-brand hover:underline">Ver perfil</Link>}
+                <p className="truncate text-xs text-ink-muted">{p.agent?.title ?? t("agentFallback")}{p.agent?.agency ? ` · ${p.agent.agency}` : ""}</p>
+                {p.agent && <Link href={`/agentes/${p.agent.slug}`} className="text-xs font-semibold text-brand hover:underline">{t("viewProfile")}</Link>}
               </div>
             </div>
             <div className="mt-5">
@@ -110,7 +110,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           {p.project && (
             <Link href={`/proyectos/${p.project.slug}`} className="card flex items-center gap-3 p-4 hover:border-brand">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand"><MapPin className="h-5 w-5" /></span>
-              <div><p className="text-xs text-ink-muted">Parte del proyecto</p><p className="font-semibold">{p.project.name}</p></div>
+              <div><p className="text-xs text-ink-muted">{t("partOfProject")}</p><p className="font-semibold">{p.project.name}</p></div>
             </Link>
           )}
         </aside>

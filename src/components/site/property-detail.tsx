@@ -11,7 +11,7 @@ import { Modal } from "@/components/ui/modal";
 import { WishlistButton } from "@/components/site/wishlist-button";
 import { Stars } from "@/components/ui/stars";
 import { formatDate, youtubeEmbed, cn } from "@/lib/utils";
-import { STATUS_LABELS } from "@/lib/constants";
+import { useStatusLabel } from "@/components/ui/badge";
 import type { PropertyFull } from "@/server/modules/properties/service";
 
 const MapView = dynamic(() => import("@/components/site/map-view").then((m) => m.MapView), { ssr: false });
@@ -20,6 +20,7 @@ type Tab = "overview" | "details" | "features" | "nearby" | "location" | "video"
 
 export function PropertyDetail({ p, rating, children }: { p: PropertyFull; rating: { avg: number; count: number }; children?: React.ReactNode }) {
   const t = useTranslations("property");
+  const statusLabel = useStatusLabel();
   const [tab, setTab] = useState<Tab>("overview");
   const [video, setVideo] = useState(false);
   const embed = youtubeEmbed(p.videoUrl);
@@ -38,7 +39,7 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
 
   const details: [string, React.ReactNode, React.ComponentType<{ className?: string }>][] = [
     [t("code"), p.uniqueId, Hash],
-    [t("type"), STATUS_LABELS[p.type], Tag],
+    [t("type"), statusLabel(p.type), Tag],
     [t("category"), p.category?.name, Building2],
     [t("areaLabel"), p.area ? `${p.area} m²` : null, Maximize2],
     [t("bedroomsLabel"), p.bedrooms, BedDouble],
@@ -46,7 +47,7 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
     [t("parking"), p.parking, Car],
     [t("floors"), p.floors, Layers],
     [t("yearBuilt"), p.yearBuilt, CalendarClock],
-    [t("status"), STATUS_LABELS[p.status], Check],
+    [t("status"), statusLabel(p.status), Check],
     ...p.customValues.map((c) => [c.field.name, c.value, Tag] as [string, React.ReactNode, React.ComponentType<{ className?: string }>]),
   ];
 
@@ -67,7 +68,7 @@ export function PropertyDetail({ p, rating, children }: { p: PropertyFull; ratin
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={cn("chip", p.type === "SALE" ? "bg-brand-soft text-brand-strong" : "bg-rent-soft text-rent")}>{STATUS_LABELS[p.type]}</span>
+            <span className={cn("chip", p.type === "SALE" ? "bg-brand-soft text-brand-strong" : "bg-rent-soft text-rent")}>{statusLabel(p.type)}</span>
             {p.category && <span className="chip bg-muted text-ink-soft">{p.category.name}</span>}
             {p.isFeatured && <span className="chip bg-accent-soft text-accent-strong">{t("featuredBadge")}</span>}
             {rating.count > 0 && <Stars value={rating.avg} count={rating.count} />}

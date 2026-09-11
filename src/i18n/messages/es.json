@@ -96,7 +96,18 @@
       "cities": "Ciudades",
       "agents": "Asesores",
       "clients": "Clientes felices"
-    }
+    },
+    "eyebrowFeatured": "Selección",
+    "eyebrowProjects": "Obra nueva",
+    "eyebrowCities": "Ubicaciones",
+    "eyebrowTeam": "Equipo",
+    "eyebrowBlog": "Blog",
+    "why1Title": "Propiedades verificadas",
+    "why1Text": "Cada publicación pasa por moderación para que no pierdas tiempo con anuncios falsos.",
+    "why2Title": "Búsqueda por mapa",
+    "why2Text": "Explora por zonas, filtra por precio, área y características, y guarda tus favoritas.",
+    "why3Title": "Asesores de verdad",
+    "why3Text": "Personas que conocen el barrio y te acompañan de la visita a la firma."
   },
   "property": {
     "overview": "Descripción",
@@ -143,7 +154,12 @@
     "noFeatures": "Sin características registradas.",
     "noNearby": "Sin lugares cercanos registrados.",
     "noLocation": "Ubicación no disponible",
-    "linkCopied": "Enlace copiado"
+    "linkCopied": "Enlace copiado",
+    "home": "Inicio",
+    "priceLabel": "Precio",
+    "agentFallback": "Asesor",
+    "viewProfile": "Ver perfil",
+    "partOfProject": "Parte del proyecto"
   },
   "list": {
     "titleAll": "Propiedades",
@@ -205,5 +221,43 @@
     "errorTitle": "Algo salió mal",
     "errorText": "Ocurrió un error inesperado al cargar la página. Puedes intentarlo de nuevo.",
     "retry": "Reintentar"
+  },
+  "status": {
+    "SALE": "Venta",
+    "RENT": "Alquiler",
+    "AVAILABLE": "Disponible",
+    "RESERVED": "Reservada",
+    "SOLD": "Vendida",
+    "RENTED": "Alquilada",
+    "HIDDEN": "Oculta",
+    "PENDING": "Pendiente",
+    "APPROVED": "Aprobada",
+    "REJECTED": "Rechazada",
+    "SELLING": "En venta",
+    "BUILDING": "En construcción",
+    "FINISHED": "Terminado",
+    "COMING_SOON": "Próximamente",
+    "NEW": "Nueva",
+    "READ": "Leída",
+    "REPLIED": "Respondida",
+    "CLOSED": "Cerrada",
+    "PAID": "Pagada",
+    "CANCELLED": "Cancelada",
+    "REFUNDED": "Reembolsada",
+    "DRAFT": "Borrador",
+    "PUBLISHED": "Publicado",
+    "OPEN": "Abierta",
+    "FULL_TIME": "Tiempo completo",
+    "PART_TIME": "Medio tiempo",
+    "CONTRACT": "Contrato",
+    "REMOTE": "Remoto",
+    "ADMIN": "Administrador",
+    "AGENT": "Agente",
+    "CUSTOMER": "Cliente",
+    "MONTH": "mes",
+    "YEAR": "año",
+    "DAY": "día",
+    "COMPLETED": "Completado",
+    "FAILED": "Fallido"
   }
 }
